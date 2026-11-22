@@ -1,0 +1,165 @@
+Organization:
+  type: object
+  additionalProperties: false
+  required: [id, name, kind, state, revision, created_at, role, membership_status, can_manage_members]
+  properties:
+    id: {$ref: './common.yaml#/Id'}
+    name: {type: string, minLength: 1, maxLength: 120}
+    kind: {type: string, enum: [personal, shared]}
+    state: {type: string, enum: [active, suspended]}
+    revision: {type: integer, minimum: 1, maximum: 9007199254740991}
+    created_at: {$ref: './common.yaml#/Time'}
+    role: {$ref: '#/Role'}
+    membership_status: {$ref: '#/MemberStatus'}
+    can_manage_members: {type: boolean}
+Membership:
+  type: object
+  additionalProperties: false
+  required: [user_id, display_name, role, status, revision, updated_at]
+  properties:
+    user_id: {$ref: './common.yaml#/Id'}
+    display_name: {type: string}
+    role: {$ref: '#/Role'}
+    status: {$ref: '#/MemberStatus'}
+    revision: {type: integer, minimum: 1, maximum: 9007199254740991}
+    updated_at: {$ref: './common.yaml#/Time'}
+Role: {type: string, enum: [owner, admin, researcher, viewer]}
+MemberStatus: {type: string, enum: [active, suspended, revoked]}
+CreateInput:
+  type: object
+  additionalProperties: false
+  required: [name]
+  properties:
+    name:
+      type: string
+      minLength: 1
+      description: UTF-8 without control characters; server trims whitespace and checks 1..120 Unicode code points after trimming. Request body limit is 64 KiB.
+MemberChange:
+  type: object
+  additionalProperties: false
+  required: [role, status, revision]
+  properties:
+    role: {$ref: '#/Role'}
+    status: {$ref: '#/MemberStatus'}
+    revision: {type: integer, minimum: 1, maximum: 9007199254740991}
+OrganizationList:
+  type: object
+  additionalProperties: false
+  required: [items]
+  properties:
+    items: {type: array, items: {$ref: '#/Organization'}}
+MemberList:
+  type: object
+  additionalProperties: false
+  required: [items]
+  properties:
+    items: {type: array, items: {$ref: '#/Membership'}}
+OrganizationId:
+  name: organizationId
+  in: path
+  required: true
+  schema: {$ref: './common.yaml#/Id'}
+MemberId:
+  name: userId
+  in: path
+  required: true
+  schema: {$ref: './common.yaml#/Id'}
+ApiError:
+  type: object
+  additionalProperties: false
+  required: [code, message, request_id, retryable]
+  properties:
+    code:
+      type: string
+      enum: [INVALID_REQUEST, UNAUTHORIZED, FORBIDDEN, NOT_FOUND, VERSION_CONFLICT, LAST_OWNER, ORGANIZATION_LIMIT, ORGS_NOT_CONFIGURED, PAYLOAD_TOO_LARGE, UNSUPPORTED_MEDIA_TYPE, RATE_LIMITED, INTERNAL, DEPENDENCY_UNAVAILABLE]
+    message: {type: string, minLength: 1, maxLength: 512}
+    request_id: {type: string, minLength: 1, maxLength: 128}
+    retryable: {type: boolean}
+Error:
+  description: Safe organization error; semantics and feature gate in ORGANIZATIONS.md.
+  headers:
+    X-Request-ID: {schema: {type: string}}
+    WWW-Authenticate: {schema: {type: string}, description: Bearer challenge on 401}
+    Retry-After: {schema: {type: integer, minimum: 1}, description: Supplied for rate limiting}
+  content:
+    application/json:
+      schema: {$ref: '#/ApiError'}
+Organizations:
+  get:
+    operationId: listOrganizations
+    description: Active memberships only; no project ACL expansion. Disabled feature returns 503 ORGS_NOT_CONFIGURED.
+    responses:
+      '200':
+        description: Organizations ordered by created_at and id ascending
+        content: {application/json: {schema: {$ref: '#/OrganizationList'}}}
+      '400': {$ref: '#/Error'}
+      '401': {$ref: '#/Error'}
+      '403': {$ref: '#/Error'}
+      '404': {$ref: '#/Error'}
+      '429': {$ref: '#/Error'}
+      '500': {$ref: '#/Error'}
+      '503': {$ref: '#/Error'}
+OrganizationItem:
+  parameters:
+    - {$ref: '#/OrganizationId'}
+  put:
+    operationId: createOrganization
+    description: Creates shared organization by client UUID; normalized-name replay returns current state with 200. Not an edit operation.
+    requestBody:
+      required: true
+      content: {application/json: {schema: {$ref: '#/CreateInput'}}}
+    responses:
+      '200':
+        description: Created organization or current representation on authorized UUID replay
+        content: {application/json: {schema: {$ref: '#/Organization'}}}
+      '400': {$ref: '#/Error'}
+      '401': {$ref: '#/Error'}
+      '403': {$ref: '#/Error'}
+      '404': {$ref: '#/Error'}
+      '409': {$ref: '#/Error'}
+      '413': {$ref: '#/Error'}
+      '415': {$ref: '#/Error'}
+      '429': {$ref: '#/Error'}
+      '500': {$ref: '#/Error'}
+      '503': {$ref: '#/Error'}
+Members:
+  parameters:
+    - {$ref: '#/OrganizationId'}
+  get:
+    operationId: listOrganizationMembers
+    description: Only organization owner/admin can list existing memberships; no global admin bypass.
+    responses:
+      '200':
+        description: Members ordered by display_name and user_id ascending
+        content: {application/json: {schema: {$ref: '#/MemberList'}}}
+      '400': {$ref: '#/Error'}
+      '401': {$ref: '#/Error'}
+      '403': {$ref: '#/Error'}
+      '404': {$ref: '#/Error'}
+      '429': {$ref: '#/Error'}
+      '500': {$ref: '#/Error'}
+      '503': {$ref: '#/Error'}
+Member:
+  parameters:
+    - {$ref: '#/OrganizationId'}
+    - {$ref: '#/MemberId'}
+  patch:
+    operationId: changeOrganizationMember
+    description: Changes existing membership using expected revision. No invitation or member creation. Last effective owner is protected.
+    requestBody:
+      required: true
+      content: {application/json: {schema: {$ref: '#/MemberChange'}}}
+    responses:
+      '200':
+        description: Updated membership or current unchanged state for a no-op at current revision
+        content: {application/json: {schema: {$ref: '#/Membership'}}}
+      '400': {$ref: '#/Error'}
+      '401': {$ref: '#/Error'}
+      '403': {$ref: '#/Error'}
+      '404': {$ref: '#/Error'}
+      '409': {$ref: '#/Error'}
+      '413': {$ref: '#/Error'}
+      '415': {$ref: '#/Error'}
+      '429': {$ref: '#/Error'}
+      '500': {$ref: '#/Error'}
+      '503': {$ref: '#/Error'}

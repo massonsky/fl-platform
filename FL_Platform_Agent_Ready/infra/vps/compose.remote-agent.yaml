@@ -1,0 +1,19 @@
+name: fl-platform-agent
+services:
+  worker4:
+    image: fl-platform/ml-client:mvp
+    restart: unless-stopped
+    environment:
+      FL_CLIENT_INDEX: "4"
+      FL_GRPC_ADDR: api:18082
+    extra_hosts: ["api:host-gateway"]
+    volumes:
+      - /opt/fl-platform-agent/secrets/client_4:/run/secrets/client_token:ro
+      - /opt/fl-platform-agent/secrets/server.crt:/run/secrets/server.crt:ro
+    mem_limit: 450m
+    cpus: 0.5
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}

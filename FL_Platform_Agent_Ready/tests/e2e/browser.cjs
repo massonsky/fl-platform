@@ -1,0 +1,71 @@
+const fs = require('node:fs');
+const http = require('node:http');
+const {chromium} = require('playwright');
+const password = fs.readFileSync('/run/secrets/admin_password', 'utf8').trim();
+const evidence = JSON.parse(fs.readFileSync('/evidence/runs.json', 'utf8'));
+async function main() {
+  // Match the supported localhost/SSH origin without exposing the host network.
+  const proxy = http.createServer((incoming, outgoing) => {
+    const upstream = http.request({hostname: process.env.WEB_HOST || 'web', port: 80, path: incoming.url,
+      method: incoming.method, headers: incoming.headers}, response => {
+      outgoing.writeHead(response.statusCode, response.headers); response.pipe(outgoing);
+    });
+    upstream.on('error', () => {outgoing.writeHead(502); outgoing.end()});
+    incoming.pipe(upstream);
+  });
+  await new Promise(resolve => proxy.listen(3000, '127.0.0.1', resolve));
+  const browser = await chromium.launch({headless: true});
+  const context = await browser.newContext({viewport: {width: 1440, height: 1080}, acceptDownloads: true});
+  const page = await context.newPage();
+  const errors = [];
+  page.on('pageerror', e => errors.push(e.message));
+  await page.goto('http://127.0.0.1:3000/#login', {waitUntil: 'networkidle'});
+  await page.getByLabel('Логин', {exact: true}).fill('admin');
+  await page.getByLabel('Пароль', {exact: true}).fill(password);
+  await page.getByRole('button', {name: 'Войти'}).click();
+  await page.getByRole('heading', {name: 'Эксперименты', exact: true}).waitFor();
+  await page.getByLabel('Текущий проект').selectOption(evidence.project_id);
+  const first = evidence.runs[0];
+  await page.getByRole('button', {name: new RegExp(first.id.slice(0,8))}).click();
+  await page.getByText('94.33%', {exact: true}).waitFor();
+  await page.getByLabel('Сравнить с запуском').selectOption(evidence.runs[1].id);
+  await page.getByText('Совпадают разбиение, начальные веса и бюджет.').waitFor();
+  await page.screenshot({path: '/evidence/dashboard-desktop.png', fullPage: true});
+  const downloading = page.waitForEvent('download');
+  await page.getByRole('button', {name: 'Экспорт'}).click();
+  await (await downloading).saveAs('/evidence/browser-export.zip');
+  await page.setViewportSize({width: 390, height: 844});
+  await page.screenshot({path: '/evidence/dashboard-mobile.png', fullPage: true});
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
+  if (overflow) throw new Error('mobile layout overflows viewport');
+  await page.setViewportSize({width: 1440, height: 1080});
+  await page.getByRole('button', {name: 'Создать проект', exact: true}).click();
+  const projectDialog = page.getByRole('dialog');
+  await projectDialog.getByLabel('Название', {exact: true}).fill('Браузерная проверка MVP');
+  await projectDialog.getByLabel('Короткое имя').fill('browser-' + Date.now());
+  await projectDialog.getByRole('button', {name: 'Создать проект', exact: true}).click();
+  await projectDialog.waitFor({state: 'hidden'});
+  await page.getByRole('button', {name: 'Новый эксперимент', exact: true}).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByLabel('Название', {exact: true}).fill('Запуск из браузера');
+  await dialog.getByLabel('Алгоритм').selectOption('fedprox');
+  await dialog.getByLabel('Раунды', {exact: true}).fill('1');
+  await dialog.getByRole('button', {name: 'Создать и запустить'}).click();
+  await dialog.waitFor({state: 'hidden'});
+  await page.locator('.stats .status').filter({hasText: 'Завершён'}).waitFor({timeout: 90000});
+  await page.getByRole('button', {name: 'Повторить', exact: true}).click();
+  await page.waitForFunction(() => document.querySelectorAll('.run-list tbody tr').length === 2);
+  await page.getByRole('button', {name: 'Новый эксперимент', exact: true}).click();
+  await page.getByRole('dialog').getByLabel('Название', {exact: true}).fill('Проверка отмены');
+  await page.getByRole('dialog').getByRole('button', {name: 'Создать и запустить'}).click();
+  await page.getByRole('dialog').waitFor({state: 'hidden'});
+  await page.getByRole('button', {name: 'Остановить', exact: true}).click();
+  await page.locator('.stats .status').filter({hasText: 'Отменён'}).waitFor();
+  await page.getByRole('button', {name: 'Выйти', exact: true}).click();
+  await page.getByRole('heading', {name: 'Вход в платформу'}).waitFor();
+  if (errors.length) throw new Error('browser page errors: ' + errors.join('; '));
+  await browser.close();
+  proxy.close();
+  console.log('PASS: browser login, real metrics/comparison/export, mobile, create/run/repeat/cancel/logout');
+}
+main().catch(error => {console.error(String(error).replaceAll(password, '[redacted]')); process.exit(1)});

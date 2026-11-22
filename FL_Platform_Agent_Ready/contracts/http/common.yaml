@@ -1,0 +1,49 @@
+Id: {type: string, format: uuid}
+Hash: {type: string, pattern: '^[a-f0-9]{64}$'}
+Time: {type: string, format: date-time}
+NextCursor: {type: string, nullable: true, minLength: 1, maxLength: 2048, pattern: '^[A-Za-z0-9_-]+$'}
+Split: {type: string, enum: [train_local, validation_global, test_global]}
+
+ApiError:
+  type: object
+  additionalProperties: false
+  required: [code, message, request_id, retryable]
+  properties:
+    code:
+      type: string
+      enum: [USERNAME_CONFLICT, LAST_ADMIN, LAST_OWNER, CURRENT_PASSWORD_INVALID, INVALID_REQUEST, INVALID_CONFIG, INVALID_CURSOR, UNAUTHORIZED, FORBIDDEN, LEGACY_LAB_NOT_ADMITTED, NOT_FOUND, SLUG_CONFLICT, IDEMPOTENCY_CONFLICT, VERSION_CONFLICT, REQUEST_IN_PROGRESS, INVALID_STATE, EXPORT_NOT_READY, EXPORT_LIMIT_EXCEEDED, EXPORT_BUSY, PAYLOAD_TOO_LARGE, UNSUPPORTED_MEDIA_TYPE, RATE_LIMITED, DEPENDENCY_UNAVAILABLE, INTERNAL]
+    message: {type: string, minLength: 1, maxLength: 512}
+    request_id: {type: string, minLength: 1, maxLength: 128}
+    retryable: {type: boolean}
+    fields:
+      type: array
+      maxItems: 32
+      items:
+        type: object
+        additionalProperties: false
+        required: [field, code]
+        properties:
+          field: {type: string, minLength: 1, maxLength: 128}
+          code: {type: string, minLength: 1, maxLength: 64}
+
+Error:
+  description: Safe API error; status/code mapping is normative in HTTP_V1.md.
+  headers:
+    X-Request-ID: {schema: {type: string}, description: Safe correlation ID}
+    Retry-After: {schema: {type: integer, minimum: 1}, description: Seconds; supplied for 429/503 and retryable 409}
+    WWW-Authenticate: {schema: {type: string}, description: Bearer challenge on 401}
+  content:
+    application/json:
+      schema: {$ref: '#/ApiError'}
+
+projectId: {name: projectId, in: path, required: true, schema: {$ref: '#/Id'}}
+experimentId: {name: experimentId, in: path, required: true, schema: {$ref: '#/Id'}}
+runId: {name: runId, in: path, required: true, schema: {$ref: '#/Id'}}
+limit: {name: limit, in: query, schema: {type: integer, minimum: 1, maximum: 100, default: 50}}
+cursor: {name: cursor, in: query, schema: {type: string, minLength: 1, maxLength: 2048, pattern: '^[A-Za-z0-9_-]+$'}}
+idempotencyKey:
+  name: Idempotency-Key
+  in: header
+  required: true
+  schema: {type: string, minLength: 8, maxLength: 128, pattern: '^[A-Za-z0-9._:-]+$'}
+  description: Scoped to authenticated principal and operation; retained for resource lifetime.

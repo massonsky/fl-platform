@@ -1,0 +1,18 @@
+[Unit]
+Description=FL agent private control-plane tunnel
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/ssh -NT -o BatchMode=yes -o ExitOnForwardFailure=yes -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=yes -o UserKnownHostsFile=/opt/fl-platform-agent/secrets/known_hosts -i /opt/fl-platform-agent/secrets/tunnel_key -L 172.17.0.1:18082:127.0.0.1:18082 fl-agent-tunnel@153.56.171.221
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

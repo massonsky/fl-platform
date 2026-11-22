@@ -1,0 +1,8 @@
+import {useState,type FormEvent} from 'react';
+import {request,setToken} from './api';
+
+export function Account({name,role,onLogout}:{name:string;role:string;onLogout:()=>void}){
+ const [current,setCurrent]=useState(''),[password,setPassword]=useState(''),[repeat,setRepeat]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false);
+ async function save(e:FormEvent){e.preventDefault();setError('');if(password!==repeat){setError('Новые пароли не совпадают.');return}setBusy(true);try{await request('/account/password','POST',{current_password:current,password});setToken('');onLogout()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
+ return <><div className="page-heading"><div><h1>Мой профиль</h1><p className="muted">{name} · {role==='admin'?'Администратор':role==='viewer'?'Наблюдатель':'Исследователь'}</p></div></div><section className="panel account-panel"><h3>Сменить пароль</h3><p className="muted">После сохранения все ваши сессии завершатся. Войдите с новым паролем.</p><form onSubmit={save}><label>Текущий пароль<input type="password" value={current} onChange={e=>setCurrent(e.target.value)} required maxLength={128} autoComplete="current-password"/></label><label>Новый пароль<input type="password" value={password} onChange={e=>setPassword(e.target.value)} required minLength={12} maxLength={128} autoComplete="new-password"/></label><label>Повторите новый пароль<input type="password" value={repeat} onChange={e=>setRepeat(e.target.value)} required minLength={12} maxLength={128} autoComplete="new-password"/></label>{error&&<p className="error" role="alert">{error}</p>}<button className="primary" disabled={busy}>{busy?'Сохранение…':'Сменить пароль'}</button></form></section></>;
+}

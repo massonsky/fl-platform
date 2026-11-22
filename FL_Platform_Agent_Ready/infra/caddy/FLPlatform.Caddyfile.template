@@ -1,0 +1,14 @@
+# Deployed 2026-11-14 for the existing runtime; see docs/DUCKDNS_HANDOFF.md.
+# Add this site to a reviewed COPY of the existing full config.
+# Do not replace the existing Caddyfile or start another listener on 80/443.
+# Requires the existing host Caddy to reach the application's loopback web port.
+# See docs/HTTPS_SETUP.md for validation, approval, rollout and rollback gates.
+fl-platform.duckdns.org {
+	# Operational probes stay on the private API port; no public metrics alias.
+	@internal path /metrics /metrics/* /healthz /healthz/* /readyz /readyz/*
+	respond @internal 404
+
+	# Caddy flushes text/event-stream automatically. Keep disconnect cancellation.
+	# No negative flush_interval, response buffers, POST retry, or public API port.
+	reverse_proxy 127.0.0.1:18080
+}

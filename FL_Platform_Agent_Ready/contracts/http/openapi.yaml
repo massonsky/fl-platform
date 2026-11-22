@@ -1,0 +1,368 @@
+openapi: 3.0.3
+info:
+  title: FL Research Platform Control API
+  version: '1.0.0-candidate.1'
+  description: Pre-release HTTP contract; normative semantics in HTTP_V1.md.
+servers:
+  - url: http://127.0.0.1:8080/api/v1
+security:
+  - bearerAuth: []
+paths:
+  /me/legacy-lab:
+    $ref: './legacy-lab.yaml#/Self'
+  /admin/users/{userId}/legacy-lab:
+    $ref: './legacy-lab.yaml#/User'
+  /organizations/{organizationId}/projects:
+    $ref: './project-access.yaml#/Projects'
+  /organizations/{organizationId}/projects/{projectId}:
+    $ref: './project-access.yaml#/ProjectItem'
+  /organizations/{organizationId}/projects/{projectId}/access:
+    $ref: './project-access.yaml#/Access'
+  /organizations/{organizationId}/projects/{projectId}/access/candidates:
+    $ref: './project-access.yaml#/Candidates'
+  /organizations/{organizationId}/projects/{projectId}/members/{userId}:
+    $ref: './project-access.yaml#/Member'
+  /organizations/{organizationId}/projects/{projectId}/visibility:
+    $ref: './project-access.yaml#/Visibility'
+  /organizations:
+    $ref: './organizations.yaml#/Organizations'
+  /organizations/{organizationId}:
+    $ref: './organizations.yaml#/OrganizationItem'
+  /organizations/{organizationId}/members:
+    $ref: './organizations.yaml#/Members'
+  /organizations/{organizationId}/members/{userId}:
+    $ref: './organizations.yaml#/Member'
+  /ai/assistants:
+    $ref: './ai-assistants.yaml#/Assistants'
+  /ai/assistants/{assistantId}:
+    $ref: './ai-assistants.yaml#/Assistant'
+  /ai/conversations:
+    $ref: './ai-chat.yaml#/Conversations'
+  /ai/conversations/{conversationId}:
+    $ref: './ai-chat.yaml#/Conversation'
+  /ai/conversations/{conversationId}/messages:
+    $ref: './ai-chat.yaml#/Messages'
+  /ai/conversations/{conversationId}/cancel:
+    $ref: './ai-chat.yaml#/Cancel'
+  /ai/providers:
+    $ref: './ai-providers.yaml#/Providers'
+  /ai/providers/{providerId}:
+    $ref: './ai-providers.yaml#/ProviderItem'
+  /ai/providers/{providerId}/models:
+    $ref: './ai-providers.yaml#/ProviderModels'
+  /metrics:
+    $ref: './administration.yaml#/Metrics'
+  /admin/users:
+    $ref: './administration.yaml#/Users'
+  /admin/users/{userId}:
+    $ref: './administration.yaml#/User'
+  /admin/agents:
+    $ref: './administration.yaml#/Agents'
+  /admin/agents/{agentId}:
+    $ref: './administration.yaml#/Agent'
+  /admin/events:
+    $ref: './administration.yaml#/Events'
+  /account/password:
+    $ref: './administration.yaml#/Password'
+  /session: {$ref: './runtime.yaml#/Session'}
+  /me: {$ref: './runtime.yaml#/Me'}
+  /presets: {$ref: './runtime.yaml#/Presets'}
+  /projects:
+    get:
+      operationId: listProjects
+      parameters:
+        - {$ref: './common.yaml#/limit'}
+        - {$ref: './common.yaml#/cursor'}
+      responses:
+        '200':
+          description: listProjects result
+          content: {application/json: {schema: {$ref: './resources.yaml#/ProjectPage'}}}
+        '400': {$ref: './common.yaml#/Error'}
+        '401': {$ref: './common.yaml#/Error'}
+        '403': {$ref: './common.yaml#/Error'}
+        '404': {$ref: './common.yaml#/Error'}
+        '429': {$ref: './common.yaml#/Error'}
+        '500': {$ref: './common.yaml#/Error'}
+        '503': {$ref: './common.yaml#/Error'}
+    post:
+      operationId: createProject
+      parameters:
+        - {$ref: './common.yaml#/idempotencyKey'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: './config.yaml#/ProjectInput'}
+      responses:
+        '201':
+          description: createProject result
+          content: {application/json: {schema: {$ref: './resources.yaml#/Project'}}}
+        '400': {$ref: './common.yaml#/Error'}
+        '401': {$ref: './common.yaml#/Error'}
+        '403': {$ref: './common.yaml#/Error'}
+        '404': {$ref: './common.yaml#/Error'}
+        '409': {$ref: './common.yaml#/Error'}
+        '429': {$ref: './common.yaml#/Error'}
+        '500': {$ref: './common.yaml#/Error'}
+        '503': {$ref: './common.yaml#/Error'}
+        '413': {$ref: './common.yaml#/Error'}
+        '415': {$ref: './common.yaml#/Error'}
+  /projects/{projectId}/experiments:
+    parameters:
+      - {$ref: './common.yaml#/projectId'}
+    get:
+      operationId: listExperiments
+      parameters:
+        - {$ref: './common.yaml#/limit'}
+        - {$ref: './common.yaml#/cursor'}
+      responses:
+        '200':
+          description: listExperiments result
+          content: {application/json: {schema: {$ref: './resources.yaml#/ExperimentPage'}}}
+        '400': {$ref: './common.yaml#/Error'}
+        '401': {$ref: './common.yaml#/Error'}
+        '403': {$ref: './common.yaml#/Error'}
+        '404': {$ref: './common.yaml#/Error'}
+        '429': {$ref: './common.yaml#/Error'}
+        '500': {$ref: './common.yaml#/Error'}
+        '503': {$ref: './common.yaml#/Error'}
+    post:
+      operationId: createExperiment
+      parameters:
+        - {$ref: './common.yaml#/idempotencyKey'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: './config.yaml#/ExperimentInput'}
+      responses:
+        '201':
+          description: createExperiment result
+          content: {application/json: {schema: {$ref: './resources.yaml#/Experiment'}}}
+        '400': {$ref: './common.yaml#/Error'}
+        '401': {$ref: './common.yaml#/Error'}
+        '403': {$ref: './common.yaml#/Error'}
+        '404': {$ref: './common.yaml#/Error'}
+        '409': {$ref: './common.yaml#/Error'}
+        '429': {$ref: './common.yaml#/Error'}
+        '500': {$ref: './common.yaml#/Error'}
+        '503': {$ref: './common.yaml#/Error'}
+        '413': {$ref: './common.yaml#/Error'}
+        '415': {$ref: './common.yaml#/Error'}
+  /projects/{projectId}/runs:
+    parameters:
+      - {$ref: './common.yaml#/projectId'}
+    get:
+      operationId: listRuns
+      parameters:
+        - {$ref: './common.yaml#/limit'}
+        - {$ref: './common.yaml#/cursor'}
+        - {name: status, in: query, schema: {type: string, enum: [draft, queued, running, completed, failed, cancelled]}}
+      responses:
+        '200':
+          description: listRuns result
+          content: {application/json: {schema: {$ref: './resources.yaml#/RunPage'}}}
+        '400': {$ref: './common.yaml#/Error'}
+        '401': {$ref: './common.yaml#/Error'}
+        '403': {$ref: './common.yaml#/Error'}
+        '404': {$ref: './common.yaml#/Error'}
+        '429': {$ref: './common.yaml#/Error'}
+        '500': {$ref: './common.yaml#/Error'}
+        '503': {$ref: './common.yaml#/Error'}
+  /experiments/{experimentId}:
+    parameters:
+      - {$ref: './common.yaml#/experimentId'}
+    get:
+      operationId: getExperiment
+      responses:
+        '200':
+          description: getExperiment result
+          content: {application/json: {schema: {$ref: './resources.yaml#/Experiment'}}}
+        '400': {$ref: './common.yaml#/Error'}
+        '401': {$ref: './common.yaml#/Error'}
+        '403': {$ref: './common.yaml#/Error'}
+        '404': {$ref: './common.yaml#/Error'}
+        '429': {$ref: './common.yaml#/Error'}
+        '500': {$ref: './common.yaml#/Error'}
+        '503': {$ref: './common.yaml#/Error'}
+  /experiments/{experimentId}/runs:
+    parameters:
+      - {$ref: './common.yaml#/experimentId'}
+    post:
+      operationId: queueRun
+      parameters:
+        - {$ref: './common.yaml#/idempotencyKey'}
+      responses:
+        '202':
+          description: queueRun result
+          content: {application/json: {schema: {$ref: './resources.yaml#/Run'}}}
+        '400': {$ref: './common.yaml#/Error'}
+        '401': {$ref: './common.yaml#/Error'}
+        '403': {$ref: './common.yaml#/Error'}
+        '404': {$ref: './common.yaml#/Error'}
+        '409': {$ref: './common.yaml#/Error'}
+        '429': {$ref: './common.yaml#/Error'}
+        '500': {$ref: './common.yaml#/Error'}
+        '503': {$ref: './common.yaml#/Error'}
+  /runs/{runId}:
+    parameters:
+      - {$ref: './common.yaml#/runId'}
+    get:
+      operationId: getRun
+      responses:
+        '200':
+          description: getRun result
+          content: {application/json: {schema: {$ref: './resources.yaml#/Run'}}}
+        '400': {$ref: './common.yaml#/Error'}
+        '401': {$ref: './common.yaml#/Error'}
+        '403': {$ref: './common.yaml#/Error'}
+        '404': {$ref: './common.yaml#/Error'}
+        '429': {$ref: './common.yaml#/Error'}
+        '500': {$ref: './common.yaml#/Error'}
+        '503': {$ref: './common.yaml#/Error'}
+  /runs/{runId}/rounds:
+    parameters:
+      - {$ref: './common.yaml#/runId'}
+    get:
+      operationId: listRounds
+      parameters:
+        - {$ref: './common.yaml#/limit'}
+        - {$ref: './common.yaml#/cursor'}
+      responses:
+        '200':
+          description: listRounds result
+          content: {application/json: {schema: {$ref: './resources.yaml#/RoundPage'}}}
+        '400': {$ref: './common.yaml#/Error'}
+        '401': {$ref: './common.yaml#/Error'}
+        '403': {$ref: './common.yaml#/Error'}
+        '404': {$ref: './common.yaml#/Error'}
+        '429': {$ref: './common.yaml#/Error'}
+        '500': {$ref: './common.yaml#/Error'}
+        '503': {$ref: './common.yaml#/Error'}
+  /runs/{runId}/metrics:
+    parameters:
+      - {$ref: './common.yaml#/runId'}
+    get:
+      operationId: listMetrics
+      parameters:
+        - {$ref: './common.yaml#/limit'}
+        - {$ref: './common.yaml#/cursor'}
+        - {name: split, in: query, schema: {$ref: './common.yaml#/Split'}}
+      responses:
+        '200':
+          description: listMetrics result
+          content: {application/json: {schema: {$ref: './resources.yaml#/MetricPage'}}}
+        '400': {$ref: './common.yaml#/Error'}
+        '401': {$ref: './common.yaml#/Error'}
+        '403': {$ref: './common.yaml#/Error'}
+        '404': {$ref: './common.yaml#/Error'}
+        '429': {$ref: './common.yaml#/Error'}
+        '500': {$ref: './common.yaml#/Error'}
+        '503': {$ref: './common.yaml#/Error'}
+  /runs/{runId}/events:
+    parameters:
+      - {$ref: './common.yaml#/runId'}
+    get:
+      operationId: listEvents
+      parameters:
+        - {$ref: './common.yaml#/limit'}
+        - {$ref: './common.yaml#/cursor'}
+      responses:
+        '200':
+          description: listEvents result
+          content: {application/json: {schema: {$ref: './resources.yaml#/EventPage'}}}
+        '400': {$ref: './common.yaml#/Error'}
+        '401': {$ref: './common.yaml#/Error'}
+        '403': {$ref: './common.yaml#/Error'}
+        '404': {$ref: './common.yaml#/Error'}
+        '429': {$ref: './common.yaml#/Error'}
+        '500': {$ref: './common.yaml#/Error'}
+        '503': {$ref: './common.yaml#/Error'}
+  /runs/{runId}/cancel:
+    parameters:
+      - {$ref: './common.yaml#/runId'}
+    post:
+      operationId: cancelRun
+      parameters:
+        - {$ref: './common.yaml#/idempotencyKey'}
+      responses:
+        '200':
+          description: cancelRun result
+          content: {application/json: {schema: {$ref: './resources.yaml#/Run'}}}
+        '400': {$ref: './common.yaml#/Error'}
+        '401': {$ref: './common.yaml#/Error'}
+        '403': {$ref: './common.yaml#/Error'}
+        '404': {$ref: './common.yaml#/Error'}
+        '409': {$ref: './common.yaml#/Error'}
+        '429': {$ref: './common.yaml#/Error'}
+        '500': {$ref: './common.yaml#/Error'}
+        '503': {$ref: './common.yaml#/Error'}
+  /runs/{runId}/export:
+    parameters:
+      - {$ref: './common.yaml#/runId'}
+    get:
+      operationId: exportRun
+      responses:
+        '200':
+          description: exportRun result
+          content: {application/zip: {schema: {type: string, format: binary}}}
+        '400': {$ref: './common.yaml#/Error'}
+        '401': {$ref: './common.yaml#/Error'}
+        '403': {$ref: './common.yaml#/Error'}
+        '404': {$ref: './common.yaml#/Error'}
+        '409': {$ref: './common.yaml#/Error'}
+        '429': {$ref: './common.yaml#/Error'}
+        '500': {$ref: './common.yaml#/Error'}
+        '503': {$ref: './common.yaml#/Error'}
+  /healthz:
+    servers:
+      - url: http://127.0.0.1:8080
+    get:
+      operationId: healthz
+      security: []
+      responses:
+        '200':
+          description: Healthy
+          content: {application/json: {schema: {$ref: './resources.yaml#/Health'}}}
+  /readyz:
+    servers:
+      - url: http://127.0.0.1:8080
+    get:
+      operationId: readyz
+      security: []
+      responses:
+        '200':
+          description: Healthy
+          content: {application/json: {schema: {$ref: './resources.yaml#/Health'}}}
+        '503':
+          description: Dependencies not ready; no private diagnostics
+          content: {application/json: {schema: {$ref: './resources.yaml#/Health'}}}
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    LegacyLabAdmission: {$ref: './legacy-lab.yaml#/Admission'}
+    LegacyLabAdmissionChange: {$ref: './legacy-lab.yaml#/Change'}
+    OrganizationProject: {$ref: './project-access-schemas.yaml#/Project'}
+    OrganizationProjectPage: {$ref: './project-access-schemas.yaml#/ProjectPage'}
+    OrganizationProjectAccessPage: {$ref: './project-access-schemas.yaml#/AccessPage'}
+    OrganizationProjectAccessMember: {$ref: './project-access-schemas.yaml#/AccessMember'}
+    OrganizationProjectGrant: {$ref: './project-access-schemas.yaml#/Grant'}
+    OrganizationProjectCreateInput: {$ref: './project-access-schemas.yaml#/CreateInput'}
+    OrganizationProjectGrantInput: {$ref: './project-access-schemas.yaml#/GrantInput'}
+    OrganizationProjectVisibilityInput: {$ref: './project-access-schemas.yaml#/VisibilityInput'}
+    RunConfig: {$ref: './config.yaml#/RunConfig'}
+    ExperimentInput: {$ref: './config.yaml#/ExperimentInput'}
+    ProjectInput: {$ref: './config.yaml#/ProjectInput'}
+    Project: {$ref: './resources.yaml#/Project'}
+    Experiment: {$ref: './resources.yaml#/Experiment'}
+    Run: {$ref: './resources.yaml#/Run'}
+    Round: {$ref: './resources.yaml#/Round'}
+    MetricPoint: {$ref: './resources.yaml#/MetricPoint'}
+    Event: {$ref: './resources.yaml#/Event'}
+    ApiError: {$ref: './common.yaml#/ApiError'}
+    AdminUser: {$ref: './administration_resources.yaml#/AdminUser'}
+    Agent: {$ref: './administration_resources.yaml#/Agent'}
+    AdminEvent: {$ref: './administration_resources.yaml#/AdminEvent'}

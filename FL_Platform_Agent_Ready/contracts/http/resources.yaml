@@ -1,0 +1,119 @@
+Project:
+  type: object
+  additionalProperties: false
+  required: [id, owner_id, slug, name, created_at]
+  properties:
+    id: {$ref: './common.yaml#/Id'}
+    owner_id: {$ref: './common.yaml#/Id'}
+    slug: {type: string}
+    name: {type: string}
+    created_at: {$ref: './common.yaml#/Time'}
+Experiment:
+  type: object
+  additionalProperties: false
+  required: [id, project_id, name, config_hash, config, created_at]
+  properties:
+    id: {$ref: './common.yaml#/Id'}
+    project_id: {$ref: './common.yaml#/Id'}
+    name: {type: string}
+    config_hash: {$ref: './common.yaml#/Hash'}
+    config: {$ref: './config.yaml#/RunConfig'}
+    created_at: {$ref: './common.yaml#/Time'}
+Run:
+  type: object
+  additionalProperties: false
+  required: [id, project_id, experiment_id, status, config_hash, total_rounds, completed_rounds, latest_model_version, requested_at, failure_code]
+  properties:
+    id: {$ref: './common.yaml#/Id'}
+    project_id: {$ref: './common.yaml#/Id'}
+    experiment_id: {$ref: './common.yaml#/Id'}
+    status: {type: string, enum: [draft, queued, running, completed, failed, cancelled]}
+    config_hash: {$ref: './common.yaml#/Hash'}
+    total_rounds: {type: integer, minimum: 1, maximum: 10000}
+    completed_rounds: {type: integer, minimum: 0, maximum: 10000}
+    latest_model_version: {type: integer, nullable: true, minimum: 0, maximum: 10000}
+    requested_at: {$ref: './common.yaml#/Time'}
+    failure_code: {type: string, nullable: true, minLength: 1, maxLength: 64}
+Round:
+  type: object
+  additionalProperties: false
+  required: [id, run_id, round_no, status, selected_count, accepted_count, model_version]
+  properties:
+    id: {$ref: './common.yaml#/Id'}
+    run_id: {$ref: './common.yaml#/Id'}
+    round_no: {type: integer, minimum: 1, maximum: 10000}
+    status: {type: string, enum: [planned, dispatching, collecting, aggregating, evaluating, completed, failed, cancelled]}
+    selected_count: {type: integer, minimum: 0, maximum: 100}
+    accepted_count: {type: integer, minimum: 0, maximum: 100}
+    model_version: {type: integer, nullable: true, minimum: 1, maximum: 10000}
+MetricPoint:
+  type: object
+  additionalProperties: false
+  required: [id, run_id, round_no, split, name, value, measured_at, client_id]
+  properties:
+    id: {type: string, pattern: '^[1-9][0-9]{0,18}$'}
+    run_id: {$ref: './common.yaml#/Id'}
+    round_no: {type: integer, nullable: true, minimum: 1, maximum: 10000}
+    split: {$ref: './common.yaml#/Split'}
+    name: {type: string, minLength: 1, maxLength: 64}
+    value: {type: number, description: Finite recorded value only; never substitute missing measurements with zero.}
+    measured_at: {$ref: './common.yaml#/Time'}
+    client_id: {type: string, format: uuid, nullable: true}
+Event:
+  type: object
+  additionalProperties: false
+  required: [sequence, run_id, type, created_at]
+  properties:
+    sequence: {type: string, pattern: '^[1-9][0-9]{0,18}$'}
+    run_id: {$ref: './common.yaml#/Id'}
+    type: {type: string, minLength: 1, maxLength: 64}
+    created_at: {$ref: './common.yaml#/Time'}
+  description: Public audit summary excludes internal payload, credentials and client dataset paths.
+ProjectPage:
+  type: object
+  additionalProperties: false
+  required: [items, next_cursor]
+  properties:
+    items: {type: array, maxItems: 100, items: {$ref: '#/Project'}}
+    next_cursor: {$ref: './common.yaml#/NextCursor'}
+ExperimentPage:
+  type: object
+  additionalProperties: false
+  required: [items, next_cursor]
+  properties:
+    items: {type: array, maxItems: 100, items: {$ref: '#/Experiment'}}
+    next_cursor: {$ref: './common.yaml#/NextCursor'}
+RunPage:
+  type: object
+  additionalProperties: false
+  required: [items, next_cursor]
+  properties:
+    items: {type: array, maxItems: 100, items: {$ref: '#/Run'}}
+    next_cursor: {$ref: './common.yaml#/NextCursor'}
+RoundPage:
+  type: object
+  additionalProperties: false
+  required: [items, next_cursor]
+  properties:
+    items: {type: array, maxItems: 100, items: {$ref: '#/Round'}}
+    next_cursor: {$ref: './common.yaml#/NextCursor'}
+MetricPage:
+  type: object
+  additionalProperties: false
+  required: [items, next_cursor]
+  properties:
+    items: {type: array, maxItems: 100, items: {$ref: '#/MetricPoint'}}
+    next_cursor: {$ref: './common.yaml#/NextCursor'}
+EventPage:
+  type: object
+  additionalProperties: false
+  required: [items, next_cursor]
+  properties:
+    items: {type: array, maxItems: 100, items: {$ref: '#/Event'}}
+    next_cursor: {$ref: './common.yaml#/NextCursor'}
+Health:
+  type: object
+  additionalProperties: false
+  required: [status]
+  properties:
+    status: {type: string, enum: [ok, not_ready]}

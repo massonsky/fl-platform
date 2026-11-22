@@ -1,0 +1,230 @@
+{
+  "AssistantProfile": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "provider_id",
+      "model",
+      "instruction",
+      "enabled",
+      "revision",
+      "id",
+      "updated_at"
+    ],
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 80
+      },
+      "provider_id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "model": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "instruction": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 16384
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "revision": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "updated_at": {
+        "type": "string",
+        "format": "date-time"
+      }
+    }
+  },
+  "AssistantInput": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "provider_id",
+      "model",
+      "instruction",
+      "enabled",
+      "revision"
+    ],
+    "properties": {
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 80
+      },
+      "provider_id": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "model": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256
+      },
+      "instruction": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 16384
+      },
+      "enabled": {
+        "type": "boolean"
+      },
+      "revision": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  },
+  "Assistants": {
+    "get": {
+      "operationId": "listAssistants",
+      "responses": {
+        "200": {
+          "description": "Result",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "items"
+                ],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "maxItems": 50,
+                    "items": {
+                      "$ref": "#/AssistantProfile"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "401": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "403": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "404": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "409": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "413": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "415": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "429": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "500": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "503": {
+          "$ref": "./common.yaml#/Error"
+        }
+      }
+    }
+  },
+  "Assistant": {
+    "parameters": [
+      {
+        "name": "assistantId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    ],
+    "put": {
+      "operationId": "saveAssistant",
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/AssistantInput"
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Result",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/AssistantProfile"
+              }
+            }
+          }
+        },
+        "201": {
+          "description": "Result",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/AssistantProfile"
+              }
+            }
+          }
+        },
+        "400": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "401": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "403": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "404": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "409": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "413": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "415": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "429": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "500": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "503": {
+          "$ref": "./common.yaml#/Error"
+        }
+      }
+    }
+  }
+}

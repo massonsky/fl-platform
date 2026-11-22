@@ -1,0 +1,228 @@
+{
+  "AdminUser": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "username",
+      "name",
+      "role",
+      "disabled",
+      "created_at"
+    ],
+    "properties": {
+      "id": {
+        "$ref": "./common.yaml#/Id"
+      },
+      "username": {
+        "type": "string"
+      },
+      "name": {
+        "type": "string"
+      },
+      "role": {
+        "type": "string",
+        "enum": [
+          "admin",
+          "researcher",
+          "viewer"
+        ]
+      },
+      "disabled": {
+        "type": "boolean"
+      },
+      "created_at": {
+        "$ref": "./common.yaml#/Time"
+      }
+    }
+  },
+  "Agent": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "name",
+      "shard",
+      "version",
+      "status",
+      "last_seen_at",
+      "active_tasks"
+    ],
+    "properties": {
+      "id": {
+        "$ref": "./common.yaml#/Id"
+      },
+      "name": {
+        "type": "string"
+      },
+      "shard": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 4
+      },
+      "version": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "online",
+          "offline",
+          "disabled"
+        ]
+      },
+      "last_seen_at": {
+        "type": "string",
+        "format": "date-time",
+        "nullable": true
+      },
+      "active_tasks": {
+        "type": "integer",
+        "minimum": 0
+      }
+    }
+  },
+  "AdminEvent": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "actor",
+      "target_id",
+      "action",
+      "created_at"
+    ],
+    "properties": {
+      "id": {
+        "$ref": "./common.yaml#/Id"
+      },
+      "actor": {
+        "type": "string"
+      },
+      "target_id": {
+        "$ref": "./common.yaml#/Id"
+      },
+      "action": {
+        "type": "string"
+      },
+      "created_at": {
+        "$ref": "./common.yaml#/Time"
+      }
+    }
+  },
+  "CreateUser": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "username",
+      "name",
+      "role",
+      "password"
+    ],
+    "properties": {
+      "username": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9._-]{2,63}$"
+      },
+      "name": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 120
+      },
+      "role": {
+        "type": "string",
+        "enum": [
+          "admin",
+          "researcher",
+          "viewer"
+        ]
+      },
+      "password": {
+        "type": "string",
+        "minLength": 12,
+        "maxLength": 128,
+        "writeOnly": true
+      }
+    }
+  },
+  "UpdateUser": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "role",
+      "disabled"
+    ],
+    "properties": {
+      "role": {
+        "type": "string",
+        "enum": [
+          "admin",
+          "researcher",
+          "viewer"
+        ]
+      },
+      "disabled": {
+        "type": "boolean"
+      },
+      "password": {
+        "type": "string",
+        "minLength": 12,
+        "maxLength": 128,
+        "writeOnly": true
+      }
+    }
+  },
+  "DisableAgent": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "disabled"
+    ],
+    "properties": {
+      "disabled": {
+        "type": "boolean"
+      }
+    }
+  },
+  "ChangePassword": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "current_password",
+      "password"
+    ],
+    "properties": {
+      "current_password": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 128,
+        "writeOnly": true
+      },
+      "password": {
+        "type": "string",
+        "minLength": 12,
+        "maxLength": 128,
+        "writeOnly": true
+      }
+    }
+  },
+  "Saved": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "saved"
+    ],
+    "properties": {
+      "id": {
+        "$ref": "./common.yaml#/Id"
+      },
+      "saved": {
+        "type": "boolean",
+        "enum": [
+          true
+        ]
+      }
+    }
+  }
+}

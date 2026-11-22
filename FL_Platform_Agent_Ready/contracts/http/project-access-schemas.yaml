@@ -1,0 +1,138 @@
+Capabilities:
+  type: object
+  additionalProperties: false
+  required: [can_read, can_export, can_create_experiments, can_start_runs, can_cancel_runs, can_manage_access]
+  properties:
+    can_read: {type: boolean}
+    can_export: {type: boolean}
+    can_create_experiments: {type: boolean}
+    can_start_runs: {type: boolean, enum: [false]}
+    can_cancel_runs: {type: boolean}
+    can_manage_access: {type: boolean}
+AccessSource: {type: string, enum: [organization_admin, explicit_denied, explicit_viewer, explicit_researcher, creator, organization_read, none]}
+Project:
+  type: object
+  additionalProperties: false
+  required: [id, organization_id, owner_id, created_by, slug, name, access_mode, visibility, acl_revision, created_at, capabilities, access_source]
+  properties:
+    id: {$ref: './common.yaml#/Id'}
+    organization_id: {$ref: './common.yaml#/Id'}
+    owner_id: {$ref: './common.yaml#/Id'}
+    created_by: {$ref: './common.yaml#/Id'}
+    slug: {type: string, pattern: '^[a-z][a-z0-9-]{1,47}$'}
+    name: {type: string, minLength: 1, maxLength: 120}
+    access_mode: {type: string, enum: [organization]}
+    visibility: {type: string, enum: [private, organization]}
+    acl_revision: {type: integer, minimum: 1, maximum: 2147483647}
+    created_at: {$ref: './common.yaml#/Time'}
+    capabilities: {$ref: '#/Capabilities'}
+    access_source: {$ref: '#/AccessSource'}
+    run_blocked_reason: {type: string, enum: [ORG_AGENTS_NOT_READY]}
+CreateInput:
+  type: object
+  additionalProperties: false
+  required: [slug, name]
+  properties:
+    slug: {type: string, pattern: '^[a-z][a-z0-9-]{1,47}$'}
+    name: {type: string, minLength: 1, maxLength: 120}
+GrantInput:
+  type: object
+  additionalProperties: false
+  required: [role, status, revision]
+  properties:
+    role: {type: string, enum: [researcher, viewer]}
+    status: {type: string, enum: [active, revoked]}
+    revision: {type: integer, minimum: 0, maximum: 2147483647}
+VisibilityInput:
+  type: object
+  additionalProperties: false
+  required: [visibility, acl_revision]
+  properties:
+    visibility: {type: string, enum: [private, organization]}
+    acl_revision: {type: integer, minimum: 1, maximum: 2147483647}
+Grant:
+  type: object
+  additionalProperties: false
+  required: [user_id, role, status, revision, updated_at]
+  properties:
+    user_id: {$ref: './common.yaml#/Id'}
+    role: {type: string, enum: [researcher, viewer]}
+    status: {type: string, enum: [active, revoked]}
+    revision: {type: integer, minimum: 1, maximum: 2147483647}
+    updated_at: {$ref: './common.yaml#/Time'}
+NullableGrant:
+  type: object
+  nullable: true
+  additionalProperties: false
+  required: [user_id, role, status, revision, updated_at]
+  properties:
+    user_id: {$ref: './common.yaml#/Id'}
+    role: {type: string, enum: [researcher, viewer]}
+    status: {type: string, enum: [active, revoked]}
+    revision: {type: integer, minimum: 1, maximum: 2147483647}
+    updated_at: {$ref: './common.yaml#/Time'}
+AccessMember:
+  type: object
+  additionalProperties: false
+  required: [user_id, display_name, global_role, organization_role, membership_status, account_active, grant, capabilities, access_source, can_grant, can_revoke]
+  properties:
+    user_id: {$ref: './common.yaml#/Id'}
+    display_name: {type: string}
+    global_role: {type: string, enum: [admin, researcher, viewer]}
+    organization_role: {type: string, enum: [owner, admin, researcher, viewer]}
+    membership_status: {type: string, enum: [active, suspended, revoked]}
+    account_active: {type: boolean}
+    grant: {$ref: '#/NullableGrant'}
+    capabilities: {$ref: '#/Capabilities'}
+    access_source: {$ref: '#/AccessSource'}
+    can_grant: {type: boolean}
+    can_revoke: {type: boolean}
+    grant_blocked_reason: {type: string, enum: [INHERITED_ACCESS, READ_ONLY, MEMBER_NOT_ACTIVE]}
+    write_cap_reason: {type: string, enum: [MEMBER_NOT_ACTIVE, ORGANIZATION_SUSPENDED, GLOBAL_VIEWER, ORGANIZATION_VIEWER]}
+PageContext:
+  type: object
+  additionalProperties: false
+  required: [organization_id, organization_state, capabilities]
+  properties:
+    organization_id: {$ref: './common.yaml#/Id'}
+    organization_state: {type: string, enum: [active, suspended]}
+    capabilities:
+      type: object
+      additionalProperties: false
+      required: [can_create_projects]
+      properties:
+        can_create_projects: {type: boolean}
+ProjectPage:
+  type: object
+  additionalProperties: false
+  required: [items, context, next_cursor]
+  properties:
+    items: {type: array, maxItems: 100, items: {$ref: '#/Project'}}
+    context: {$ref: '#/PageContext'}
+    next_cursor: {$ref: './common.yaml#/NextCursor'}
+AccessPage:
+  type: object
+  additionalProperties: false
+  required: [items, project, next_cursor]
+  properties:
+    items: {type: array, maxItems: 100, items: {$ref: '#/AccessMember'}}
+    project: {$ref: '#/Project'}
+    next_cursor: {$ref: './common.yaml#/NextCursor'}
+ApiError:
+  type: object
+  additionalProperties: false
+  required: [code, message, request_id, retryable]
+  properties:
+    code: {type: string, enum: [INVALID_REQUEST, INVALID_CURSOR, UNAUTHORIZED, FORBIDDEN, NOT_FOUND, VERSION_CONFLICT, SLUG_CONFLICT, INHERITED_ACCESS, MEMBER_NOT_ACTIVE, ORG_PROJECTS_NOT_CONFIGURED, DEPENDENCY_UNAVAILABLE, PAYLOAD_TOO_LARGE, UNSUPPORTED_MEDIA_TYPE, RATE_LIMITED, INTERNAL]}
+    message: {type: string, minLength: 1, maxLength: 512}
+    request_id: {type: string, minLength: 1, maxLength: 128}
+    retryable: {type: boolean}
+Error:
+  description: Safe project access error; PROJECT_ACCESS.md is normative.
+  headers:
+    X-Request-ID: {schema: {type: string}}
+    Retry-After: {schema: {type: integer, minimum: 1}}
+    WWW-Authenticate: {schema: {type: string}}
+  content:
+    application/json:
+      schema: {$ref: '#/ApiError'}

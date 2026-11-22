@@ -1,0 +1,95 @@
+Admission:
+  type: object
+  additionalProperties: false
+  required: [user_id, status, revision, can_create_legacy_work]
+  properties:
+    user_id: {$ref: './common.yaml#/Id'}
+    status: {type: string, enum: [not_admitted, active, revoked]}
+    revision: {type: integer, minimum: 0, maximum: 2147483647}
+    source: {type: string, enum: [legacy_backfill, bootstrap, admin]}
+    updated_at: {$ref: './common.yaml#/Time'}
+    can_create_legacy_work: {type: boolean}
+  oneOf:
+    - properties:
+        status: {enum: [not_admitted]}
+        revision: {enum: [0]}
+        can_create_legacy_work: {enum: [false]}
+      not:
+        anyOf:
+          - required: [source]
+          - required: [updated_at]
+    - required: [source, updated_at]
+      properties:
+        status: {enum: [active]}
+        revision: {minimum: 1}
+    - required: [source, updated_at]
+      properties:
+        status: {enum: [revoked]}
+        revision: {minimum: 1}
+        can_create_legacy_work: {enum: [false]}
+Change:
+  type: object
+  additionalProperties: false
+  required: [status, revision, reason]
+  properties:
+    status: {type: string, enum: [active, revoked]}
+    revision: {type: integer, minimum: 0, maximum: 2147483647}
+    reason:
+      type: string
+      minLength: 1
+      maxLength: 240
+      pattern: '^[^\x00-\x1F\x7F-\x9F]*[^\s\x00-\x1F\x7F-\x9F][^\x00-\x1F\x7F-\x9F]*$'
+      description: Valid UTF-8, no control characters, at most240 Unicode characters before trim; trimmed reason must be nonempty.
+AdmissionResponse:
+  description: Current admission and effective capability; LEGACY_LAB.md defines CAS and global caps.
+  content:
+    application/json: {schema: {$ref: '#/Admission'}}
+UserId:
+  name: userId
+  in: path
+  required: true
+  schema: {$ref: './common.yaml#/Id'}
+Self:
+  get:
+    operationId: getMyLegacyLabAdmission
+    responses:
+      '200': {$ref: '#/AdmissionResponse'}
+      '400': {$ref: './common.yaml#/Error'}
+      '401': {$ref: './common.yaml#/Error'}
+      '403': {$ref: './common.yaml#/Error'}
+      '404': {$ref: './common.yaml#/Error'}
+      '429': {$ref: './common.yaml#/Error'}
+      '500': {$ref: './common.yaml#/Error'}
+      '503': {$ref: './common.yaml#/Error'}
+User:
+  parameters:
+    - {$ref: '#/UserId'}
+  get:
+    operationId: getUserLegacyLabAdmission
+    responses:
+      '200': {$ref: '#/AdmissionResponse'}
+      '400': {$ref: './common.yaml#/Error'}
+      '401': {$ref: './common.yaml#/Error'}
+      '403': {$ref: './common.yaml#/Error'}
+      '404': {$ref: './common.yaml#/Error'}
+      '429': {$ref: './common.yaml#/Error'}
+      '500': {$ref: './common.yaml#/Error'}
+      '503': {$ref: './common.yaml#/Error'}
+  put:
+    operationId: changeUserLegacyLabAdmission
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: '#/Change'}}
+    responses:
+      '200': {$ref: '#/AdmissionResponse'}
+      '400': {$ref: './common.yaml#/Error'}
+      '401': {$ref: './common.yaml#/Error'}
+      '403': {$ref: './common.yaml#/Error'}
+      '404': {$ref: './common.yaml#/Error'}
+      '409': {$ref: './common.yaml#/Error'}
+      '413': {$ref: './common.yaml#/Error'}
+      '415': {$ref: './common.yaml#/Error'}
+      '429': {$ref: './common.yaml#/Error'}
+      '500': {$ref: './common.yaml#/Error'}
+      '503': {$ref: './common.yaml#/Error'}

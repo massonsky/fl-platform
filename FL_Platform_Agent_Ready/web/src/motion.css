@@ -1,0 +1,26 @@
+.hero-copy h1{animation:hero-enter 800ms var(--ease-out) both}
+.hero-description>p{animation:hero-enter 800ms 60ms var(--ease-out) both}
+.hero-description>.button{animation:hero-enter 800ms 120ms var(--ease-out) both}
+.atlas-scene>img{animation:atlas-enter 1200ms 120ms var(--ease-out) both}
+.network-motion{position:absolute;top:0;left:0;width:100%;height:auto;aspect-ratio:1672/941;pointer-events:none;overflow:visible}
+.model-wave{transform-origin:835px 470px;animation:model-wave 3.6s linear infinite}
+.wave-two{animation-delay:-1.8s}
+.model-label{min-width:190px}
+.model-label small{animation:phase-enter 240ms var(--ease-out)}
+.is-paused .model-wave,.is-paused>img{animation-play-state:paused}
+.modal[open]{animation:dialog-enter 240ms var(--ease-out)}
+.modal[open]::backdrop{animation:phase-enter 240ms var(--ease-out)}
+.nav-item,.workflow-steps button{transition:background 160ms ease,color 160ms ease}
+button:active:not(:disabled),.button:active{transform:scale(.97)}
+@keyframes hero-enter{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes atlas-enter{from{opacity:0;transform:scale(.96) translateY(18px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes model-wave{0%{opacity:0;transform:scale(.8)}15%{opacity:.65}100%{opacity:0;transform:scale(1.5)}}
+@keyframes phase-enter{from{opacity:0}to{opacity:1}}
+@keyframes dialog-enter{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+@media(hover:hover) and (pointer:fine){.button>.icon,.text-button>.icon{transition:transform 160ms var(--ease-out)}.button:hover>.icon,.text-button:hover>.icon{transform:translateX(4px)}.workflow-steps button:hover>.icon{transform:translateX(4px)}}
+@media(max-width:760px){.model-label{min-width:140px}.model-label small{font-size:9px}.network-motion circle{r:6px}}
+html[data-input=keyboard] .modal,html[data-input=keyboard] .modal::backdrop{animation:none}
+@media(prefers-reduced-motion:reduce){.network-motion{display:none}.hero-copy h1,.hero-description>p,.hero-description>.button,.atlas-scene>img,.model-label small,.modal,.modal::backdrop{animation:none!important;transform:none}}
+
+.hero-description{animation:hero-enter 800ms 60ms var(--ease-out) both}
+@media(prefers-reduced-motion:reduce){.hero-description{animation:none}}

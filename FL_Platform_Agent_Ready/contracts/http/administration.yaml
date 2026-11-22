@@ -1,0 +1,643 @@
+{
+  "Users": {
+    "get": {
+      "operationId": "listAdminUsers",
+      "parameters": [
+        {
+          "$ref": "./common.yaml#/limit"
+        },
+        {
+          "$ref": "./common.yaml#/cursor"
+        }
+      ],
+      "responses": {
+        "400": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "401": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "403": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "404": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "409": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "413": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "415": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "429": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "500": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "503": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "200": {
+          "description": "Successful response",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "items",
+                  "next_cursor"
+                ],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "./administration_resources.yaml#/AdminUser"
+                    }
+                  },
+                  "next_cursor": {
+                    "$ref": "./common.yaml#/NextCursor"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "post": {
+      "operationId": "createUser",
+      "parameters": [
+        {
+          "$ref": "./common.yaml#/idempotencyKey"
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "./administration_resources.yaml#/CreateUser"
+            }
+          }
+        }
+      },
+      "responses": {
+        "400": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "401": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "403": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "404": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "409": {
+          "description": "Existing idempotency/username/ownership conflict, or VERSION_CONFLICT when the target password/role/state changed during preparation. No prepared credential effect was committed by this request.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./common.yaml#/ApiError"
+              }
+            }
+          }
+        },
+        "413": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "415": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "429": {
+          "description": "Shared client or current-actor credential budget exhausted before mutation. Reuse the same Idempotency-Key and body for an explicit retry.",
+          "headers": {
+            "Retry-After": {
+              "schema": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "description": "Whole seconds rounded up from the PostgreSQL budget; not a fixed cooldown."
+            }
+          },
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./common.yaml#/ApiError"
+              }
+            }
+          }
+        },
+        "500": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "503": {
+          "description": "Credential work busy, missing limiter key/schema or dependency failure. Noncredential operations remain independent of the limiter.",
+          "headers": {
+            "Retry-After": {
+              "schema": {
+                "type": "integer",
+                "enum": [
+                  3
+                ]
+              }
+            }
+          },
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./common.yaml#/ApiError"
+              }
+            }
+          }
+        },
+        "201": {
+          "description": "Successful response",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./administration_resources.yaml#/Saved"
+              }
+            }
+          }
+        }
+      },
+      "description": "Session-bound credential work uses shared client/actor budgets and the same work permit as Login. A persisted exact replay requires current authorization but no new credential work or budget. New users do not receive organization membership or legacy-lab admission automatically."
+    }
+  },
+  "User": {
+    "post": {
+      "operationId": "updateUser",
+      "parameters": [
+        {
+          "$ref": "./common.yaml#/idempotencyKey"
+        },
+        {
+          "name": "userId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "$ref": "./common.yaml#/Id"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "./administration_resources.yaml#/UpdateUser"
+            }
+          }
+        }
+      },
+      "responses": {
+        "400": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "401": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "403": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "404": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "409": {
+          "description": "Existing idempotency/username/ownership conflict, or VERSION_CONFLICT when the target password/role/state changed during preparation. No prepared credential effect was committed by this request.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./common.yaml#/ApiError"
+              }
+            }
+          }
+        },
+        "413": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "415": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "429": {
+          "description": "Shared client or current-actor credential budget exhausted before mutation. Reuse the same Idempotency-Key and body for an explicit retry.",
+          "headers": {
+            "Retry-After": {
+              "schema": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "description": "Whole seconds rounded up from the PostgreSQL budget; not a fixed cooldown."
+            }
+          },
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./common.yaml#/ApiError"
+              }
+            }
+          }
+        },
+        "500": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "503": {
+          "description": "Credential work busy, missing limiter key/schema or dependency failure. Noncredential operations remain independent of the limiter.",
+          "headers": {
+            "Retry-After": {
+              "schema": {
+                "type": "integer",
+                "enum": [
+                  3
+                ]
+              }
+            }
+          },
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./common.yaml#/ApiError"
+              }
+            }
+          }
+        },
+        "200": {
+          "description": "Successful response",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./administration_resources.yaml#/Saved"
+              }
+            }
+          }
+        }
+      },
+      "description": "Session-bound credential work uses shared client/actor budgets and the same work permit as Login. A persisted exact replay requires current authorization but no new credential work or budget. An omitted password keeps the existing noncredential role/status update path."
+    }
+  },
+  "Agents": {
+    "get": {
+      "operationId": "listAgents",
+      "parameters": [
+        {
+          "$ref": "./common.yaml#/limit"
+        },
+        {
+          "$ref": "./common.yaml#/cursor"
+        }
+      ],
+      "responses": {
+        "400": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "401": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "403": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "404": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "409": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "413": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "415": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "429": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "500": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "503": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "200": {
+          "description": "Successful response",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "items",
+                  "next_cursor"
+                ],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "./administration_resources.yaml#/Agent"
+                    }
+                  },
+                  "next_cursor": {
+                    "$ref": "./common.yaml#/NextCursor"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "Agent": {
+    "post": {
+      "operationId": "updateAgent",
+      "parameters": [
+        {
+          "$ref": "./common.yaml#/idempotencyKey"
+        },
+        {
+          "name": "agentId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "$ref": "./common.yaml#/Id"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "./administration_resources.yaml#/DisableAgent"
+            }
+          }
+        }
+      },
+      "responses": {
+        "400": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "401": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "403": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "404": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "409": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "413": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "415": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "429": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "500": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "503": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "200": {
+          "description": "Successful response",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./administration_resources.yaml#/Saved"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "Events": {
+    "get": {
+      "operationId": "listAdminEvents",
+      "parameters": [
+        {
+          "$ref": "./common.yaml#/limit"
+        },
+        {
+          "$ref": "./common.yaml#/cursor"
+        }
+      ],
+      "responses": {
+        "400": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "401": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "403": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "404": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "409": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "413": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "415": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "429": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "500": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "503": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "200": {
+          "description": "Successful response",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "items",
+                  "next_cursor"
+                ],
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "./administration_resources.yaml#/AdminEvent"
+                    }
+                  },
+                  "next_cursor": {
+                    "$ref": "./common.yaml#/NextCursor"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "Password": {
+    "post": {
+      "operationId": "changePassword",
+      "parameters": [
+        {
+          "$ref": "./common.yaml#/idempotencyKey"
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "./administration_resources.yaml#/ChangePassword"
+            }
+          }
+        }
+      },
+      "responses": {
+        "400": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "401": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "403": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "404": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "409": {
+          "description": "Existing idempotency/username/ownership conflict, or VERSION_CONFLICT when the target password/role/state changed during preparation. No prepared credential effect was committed by this request.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./common.yaml#/ApiError"
+              }
+            }
+          }
+        },
+        "413": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "415": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "429": {
+          "description": "Shared client or current-actor credential budget exhausted before mutation. Reuse the same Idempotency-Key and body for an explicit retry.",
+          "headers": {
+            "Retry-After": {
+              "schema": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "description": "Whole seconds rounded up from the PostgreSQL budget; not a fixed cooldown."
+            }
+          },
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./common.yaml#/ApiError"
+              }
+            }
+          }
+        },
+        "500": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "503": {
+          "description": "Credential work busy, missing limiter key/schema or dependency failure. Noncredential operations remain independent of the limiter.",
+          "headers": {
+            "Retry-After": {
+              "schema": {
+                "type": "integer",
+                "enum": [
+                  3
+                ]
+              }
+            }
+          },
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./common.yaml#/ApiError"
+              }
+            }
+          }
+        },
+        "200": {
+          "description": "Successful response",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./administration_resources.yaml#/Saved"
+              }
+            }
+          }
+        }
+      },
+      "description": "Session-bound credential work uses shared client/actor budgets and the same work permit as Login. A persisted exact replay requires current authorization but no new credential work or budget. Successful password changes revoke the affected user sessions; self-change replay requires a new valid session."
+    }
+  },
+  "Metrics": {
+    "get": {
+      "operationId": "prometheusMetrics",
+      "responses": {
+        "400": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "401": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "403": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "404": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "429": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "500": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "503": {
+          "$ref": "./common.yaml#/Error"
+        },
+        "200": {
+          "description": "Admin-only Prometheus process counters; reset on process restart.",
+          "content": {
+            "text/plain": {
+              "schema": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "servers": [
+      {
+        "url": "http://127.0.0.1:8080"
+      }
+    ]
+  }
+}

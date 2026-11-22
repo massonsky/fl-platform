@@ -1,0 +1,63 @@
+services:
+  api:
+    volumes:
+      - type: bind
+        source: ${FL_SECRETS_DIR:?Run Start-Demo.ps1}
+        target: /run/secrets
+        read_only: true
+  orchestrator:
+    volumes:
+      - type: bind
+        source: ${FL_SECRETS_DIR:?Run Start-Demo.ps1}
+        target: /run/secrets
+        read_only: true
+  worker0:
+    volumes:
+      - type: bind
+        source: ${FL_SECRETS_DIR:?Run Start-Demo.ps1}/client_0
+        target: /run/secrets/client_token
+        read_only: true
+      - type: bind
+        source: ${FL_SECRETS_DIR:?Run Start-Demo.ps1}/server.crt
+        target: /run/secrets/server.crt
+        read_only: true
+  worker1:
+    volumes:
+      - type: bind
+        source: ${FL_SECRETS_DIR:?Run Start-Demo.ps1}/client_1
+        target: /run/secrets/client_token
+        read_only: true
+      - type: bind
+        source: ${FL_SECRETS_DIR:?Run Start-Demo.ps1}/server.crt
+        target: /run/secrets/server.crt
+        read_only: true
+  worker2:
+    volumes:
+      - type: bind
+        source: ${FL_SECRETS_DIR:?Run Start-Demo.ps1}/client_2
+        target: /run/secrets/client_token
+        read_only: true
+      - type: bind
+        source: ${FL_SECRETS_DIR:?Run Start-Demo.ps1}/server.crt
+        target: /run/secrets/server.crt
+        read_only: true
+  worker3:
+    volumes:
+      - type: bind
+        source: ${FL_SECRETS_DIR:?Run Start-Demo.ps1}/client_3
+        target: /run/secrets/client_token
+        read_only: true
+      - type: bind
+        source: ${FL_SECRETS_DIR:?Run Start-Demo.ps1}/server.crt
+        target: /run/secrets/server.crt
+        read_only: true
+  worker4:
+    volumes:
+      - type: bind
+        source: ${FL_SECRETS_DIR:?Run Start-Demo.ps1}/client_4
+        target: /run/secrets/client_token
+        read_only: true
+      - type: bind
+        source: ${FL_SECRETS_DIR:?Run Start-Demo.ps1}/server.crt
+        target: /run/secrets/server.crt
+        read_only: true

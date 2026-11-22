@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+secrets/
+*.key
+*.pfx
+*.p12
+*.docx
+.venv/
+__pycache__/
+*.pyc
+node_modules/
+dist/
+coverage/
+.pytest_cache/

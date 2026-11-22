@@ -1,0 +1,58 @@
+name: fl-platform
+
+services:
+  postgres:
+    image: postgres@sha256:40865bc877a289da75963d97d72b59633f639fc5af7a4e856bfa3714cae5b536
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: flrp
+      POSTGRES_DB: flrp
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets: [postgres_password]
+    ports: ["127.0.0.1:15432:5432"]
+    volumes: ["postgres_data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U flrp -d flrp"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    mem_limit: 768m
+    cpus: 1.5
+    logging: &logs
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+
+  minio:
+    image: fl-platform/minio:RELEASE.2025-10-15T17-29-55Z
+    build:
+      context: ./infra/minio
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "/opt/fl-entrypoint.sh"]
+    command: ["server", "/data", "--console-address", ":9001"]
+    secrets: [minio_user, minio_password]
+    ports: ["127.0.0.1:19000:9000", "127.0.0.1:19001:9001"]
+    volumes: ["minio_data:/data"]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:9000/minio/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 30s
+    mem_limit: 1g
+    cpus: 2
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    logging: *logs
+
+secrets:
+  postgres_password:
+    file: ${FL_SECRETS_DIR:-/opt/fl-platform/secrets}/postgres_password
+  minio_user:
+    file: ${FL_SECRETS_DIR:-/opt/fl-platform/secrets}/minio_user
+  minio_password:
+    file: ${FL_SECRETS_DIR:-/opt/fl-platform/secrets}/minio_password
+
+volumes:
+  postgres_data:
+  minio_data:

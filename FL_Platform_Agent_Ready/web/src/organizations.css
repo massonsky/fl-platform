@@ -1,0 +1,27 @@
+.organization-heading{flex-wrap:wrap;align-items:flex-start}
+.organization-heading>div{flex:1 1 240px;min-width:0}
+.organization-heading h2{overflow-wrap:anywhere}
+@media(max-width:760px){
+  .organization-list-scroll{overflow:visible}
+  .organization-list-table,.organization-list-table tbody,.organization-list-table tr{display:block;width:100%}
+  .organization-list-table thead{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+  .organization-list-table tr{padding:16px 12px;border-bottom:1px solid var(--line)}
+  .organization-list-table tr:last-child{border-bottom:0}
+  .organization-list-table tr.selected{box-shadow:inset 2px 0 var(--accent)}
+  .organization-list-table td{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:6px 0;border:0;overflow-wrap:anywhere}
+  .organization-list-table td:first-child{display:block;padding:0 0 12px;box-shadow:none}
+  .organization-list-table tr.selected td:first-child{box-shadow:none}
+  .organization-list-table td[data-label]::before{content:attr(data-label);color:var(--muted);font-size:12px;flex:none}
+  .organization-list-table td>span{min-width:0;text-align:right}
+  .organization-list-table .run-link{width:100%;min-height:44px;justify-content:flex-start;text-align:left;white-space:normal;overflow-wrap:anywhere}
+  .organization-member-scroll{overflow:visible}
+  .organization-members-table,.organization-members-table tbody,.organization-members-table tr{display:block;width:100%}
+  .organization-members-table thead{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+  .organization-members-table tr{padding:20px 0;border-bottom:1px solid var(--line)}
+  .organization-members-table tr:last-child{border-bottom:0}
+  .organization-members-table td{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:6px 0;border:0;overflow-wrap:anywhere}
+  .organization-members-table td:first-child{padding:0 0 12px;font-size:15px}
+  .organization-members-table td[data-label]::before{content:attr(data-label);color:var(--muted);font-size:12px;flex:none}
+  .organization-members-table .organization-member-action{padding-top:14px}
+  .organization-member-action button{width:100%}
+}

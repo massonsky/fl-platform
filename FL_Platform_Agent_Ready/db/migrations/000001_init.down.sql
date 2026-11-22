@@ -1,0 +1,13 @@
+-- TEST/DEV ONLY. NEVER DROP production tables as a casual rollback.
+DROP TABLE IF EXISTS audit_events;
+DROP TABLE IF EXISTS metric_points;
+DROP TABLE IF EXISTS model_versions;
+DROP TABLE IF EXISTS updates;
+DROP TABLE IF EXISTS tasks;
+DROP TABLE IF EXISTS artifacts;
+DROP TABLE IF EXISTS rounds;
+DROP TABLE IF EXISTS clients;
+DROP TABLE IF EXISTS runs;
+DROP TABLE IF EXISTS experiments;
+DROP TABLE IF EXISTS projects;
+DROP TABLE IF EXISTS users;

@@ -1,0 +1,56 @@
+const fs=require('node:fs');
+const http=require('node:http');
+const assert=require('node:assert/strict');
+const {chromium}=require('playwright');
+async function main(){
+  const proxy=http.createServer((req,res)=>{const up=http.request({hostname:process.env.WEB_HOST||'web',port:80,path:req.url,method:req.method,headers:req.headers},r=>{res.writeHead(r.statusCode,r.headers);r.pipe(res)});up.on('error',()=>{res.writeHead(502);res.end()});req.pipe(up)});
+  await new Promise(resolve=>proxy.listen(3000,'127.0.0.1',resolve));
+  const browser=await chromium.launch({headless:true});
+  const context=await browser.newContext({viewport:{width:1440,height:1000},reducedMotion:'no-preference',recordVideo:{dir:'/evidence/motion-video',size:{width:1440,height:1000}}});
+  const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.goto('http://127.0.0.1:3000/');
+  await page.waitForTimeout(1500);
+  const dot=page.locator('.network-motion circle').first();
+  const point=()=>dot.evaluate(el=>{const m=el.getCTM();return [m.e,m.f]});
+  const before=await point();await page.waitForTimeout(800);assert.notDeepEqual(await point(),before,'network does not move');
+  assert.equal(await page.locator('.scene-control').count(),0);
+  const background=page.locator('.ambient-background i').first();
+  const frame=await background.evaluate(el=>getComputedStyle(el).transform);
+  await page.waitForTimeout(800);
+  assert.notEqual(await background.evaluate(el=>getComputedStyle(el).transform),frame,'ambient background is static');
+  await page.screenshot({path:'/evidence/hero.png'});
+  await page.getByRole('link',{name:'Войти в платформу',exact:true}).first().click();
+  assert.ok(await page.locator('.landing').evaluate(el=>el.getAnimations().some(a=>a.playState==='running')),'route exit missing');
+  await page.waitForURL('**/#login');await page.waitForTimeout(50);
+  assert.ok(await page.locator('.login-form form').evaluate(el=>el.getAnimations().some(a=>a.playState==='running')),'route enter missing');
+  await page.waitForTimeout(350);
+  await page.getByLabel('Логин',{exact:true}).fill('admin');
+  await page.getByLabel('Пароль',{exact:true}).fill(fs.readFileSync('/run/secrets/admin_password','utf8').trim());
+  await page.getByRole('button',{name:'Войти',exact:true}).click();
+  await page.getByRole('heading',{name:'Эксперименты',exact:true}).waitFor();
+  await page.getByRole('button',{name:'Создать проект',exact:true}).click();
+  assert.ok(await page.getByRole('dialog').evaluate(el=>el.getAnimations().some(a=>a.playState==='running')),'dialog entrance missing');
+  await page.waitForTimeout(400);await page.keyboard.press('Escape');
+  await page.getByRole('link',{name:'Агенты',exact:true}).click();
+  await page.getByRole('heading',{name:'Агенты',exact:true}).waitFor();
+  await page.waitForTimeout(350);
+  await page.getByRole('button',{name:'Выйти',exact:true}).click();
+  await page.getByRole('link',{name:'На главную',exact:true}).click();await page.waitForURL('**/#home');
+  await page.setViewportSize({width:390,height:844});await page.waitForTimeout(1500);
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+  assert.equal(await page.locator('.city-label').count(),5);
+  for(const label of await page.locator('.city-label').all()){
+    const box=await label.boundingBox();assert.ok(box&&box.x>=0&&box.x+box.width<=390,'city label clipped');
+  }
+  await page.screenshot({path:'/evidence/motion-mobile.png',fullPage:true});
+  await page.emulateMedia({reducedMotion:'reduce'});await page.waitForTimeout(100);
+  assert.ok(await page.locator('.network-motion').evaluate(el=>[...el.querySelectorAll('circle')].every(dot=>dot.getAnimations().every(animation=>animation.playState==='paused'))));
+  assert.equal(await page.locator('.network-motion').evaluate(el=>getComputedStyle(el).display),'none');
+  assert.equal(await background.evaluate(el=>el.getAnimations().length),0,'reduced-motion background still animates');
+  await page.getByRole('link',{name:'Войти в платформу',exact:true}).first().click();
+  await page.getByRole('heading',{name:'Вход в платформу'}).waitFor();
+  assert.equal(await page.locator('.login-form form').evaluate(el=>el.getAnimations().length),0);
+  assert.deepEqual(errors,[]);await context.close();await browser.close();proxy.close();
+  console.log('PASS: visible moving SVG packets, ambient background, city labels, no pause button, outgoing/incoming routes, dialog entrance, real login/logout, mobile, reduced motion; video captured');
+}
+main().catch(e=>{console.error(e.message);process.exit(1)});

@@ -1,0 +1,73 @@
+RunConfig:
+  type: object
+  additionalProperties: false
+  required: [schema_version, dataset_id, dataset_manifest_hash, partition_manifest_hash, model_name, model_revision, model_schema_hash, initial_weights_hash, runtime_manifest_hash, algorithm, clients, rounds, seed, local_epochs, batch_size, learning_rate, mu, optimizer, partition, selection_strategy, completion_policy, round_timeout_seconds, lease_seconds]
+  properties:
+    schema_version: {type: integer, enum: [1]}
+    dataset_id: {type: string, pattern: '^[A-Za-z0-9_.-]{1,128}$'}
+    dataset_manifest_hash: {$ref: './common.yaml#/Hash'}
+    partition_manifest_hash: {$ref: './common.yaml#/Hash'}
+    model_name: {type: string, pattern: '^[A-Za-z0-9_.-]{1,128}$'}
+    model_revision: {type: string, minLength: 1, maxLength: 128}
+    model_schema_hash: {$ref: './common.yaml#/Hash'}
+    initial_weights_hash: {$ref: './common.yaml#/Hash'}
+    runtime_manifest_hash: {$ref: './common.yaml#/Hash'}
+    algorithm: {type: string, enum: [fedavg, fedprox]}
+    clients: {type: integer, minimum: 1, maximum: 100}
+    rounds: {type: integer, minimum: 1, maximum: 10000}
+    seed: {type: integer, minimum: 0, maximum: 4294967295}
+    local_epochs: {type: integer, minimum: 1, maximum: 1000}
+    batch_size: {type: integer, minimum: 1, maximum: 65536}
+    learning_rate: {type: number, minimum: 0, exclusiveMinimum: true, maximum: 1000}
+    mu: {type: number, minimum: 0}
+    optimizer: {type: string, enum: [sgd]}
+    partition: {type: string, enum: [balanced, moderate, strong, dirichlet]}
+    dirichlet_alpha: {type: number, minimum: 0, exclusiveMinimum: true}
+    selection_strategy: {type: string, enum: [all]}
+    completion_policy: {$ref: '#/CompletionPolicy'}
+    round_timeout_seconds: {type: integer, minimum: 30, maximum: 86400}
+    lease_seconds: {type: integer, minimum: 10, maximum: 3600}
+  allOf:
+    - oneOf:
+        - properties: {algorithm: {enum: [fedavg]}, mu: {enum: [0]}}
+        - properties: {algorithm: {enum: [fedprox]}}
+    - oneOf:
+        - properties: {partition: {enum: [dirichlet]}}
+          required: [dirichlet_alpha]
+        - properties: {partition: {enum: [balanced, moderate, strong]}}
+          not: {required: [dirichlet_alpha]}
+  description: >-
+    Fully explicit immutable configuration. Server additionally requires
+    lease_seconds <= round_timeout_seconds and quorum min_clients <= clients;
+    manifest references must exist and describe compatible data/model/runtime.
+    Finite JSON numbers only; duplicate object keys are rejected.
+
+CompletionPolicy:
+  oneOf:
+    - type: object
+      additionalProperties: false
+      required: [mode]
+      properties:
+        mode: {type: string, enum: [strict]}
+    - type: object
+      additionalProperties: false
+      required: [mode, min_clients]
+      properties:
+        mode: {type: string, enum: [quorum]}
+        min_clients: {type: integer, minimum: 1, maximum: 100}
+
+ExperimentInput:
+  type: object
+  additionalProperties: false
+  required: [name, config]
+  properties:
+    name: {type: string, minLength: 1, maxLength: 120}
+    config: {$ref: '#/RunConfig'}
+
+ProjectInput:
+  type: object
+  additionalProperties: false
+  required: [slug, name]
+  properties:
+    slug: {type: string, pattern: '^[a-z][a-z0-9-]{1,47}$'}
+    name: {type: string, minLength: 1, maxLength: 120}

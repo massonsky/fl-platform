@@ -1,0 +1,62 @@
+name: Platform acceptance
+on:
+  push:
+    branches: [main, 'codex/**']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: platform-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  clean-install:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: FL_Platform_Agent_Ready
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Bootstrap from clean runner
+        run: sudo bash infra/vps/bootstrap_runtime.sh
+      - name: Contract and scientific checks
+        run: make test
+      - name: Race checks
+        run: docker run --rm -v "$PWD:/src:ro" -w /src/services/control-plane --entrypoint go fl-platform/go-test:mvp test -race ./internal/...
+      - name: Isolated release SQL and dependency recovery checks
+        run: python3 tests/integration/run_release_checks.py
+      - name: Two API processes and administrative security
+        run: |
+          docker tag fl-platform/control-plane:mvp fl-platform/control-plane:release-test
+          sudo python3 tests/integration/run_two_api.py
+      - name: Real training and restart acceptance
+        run: sudo python3 tests/system/mvp_smoke.py
+      - name: Browser acceptance
+        run: |
+          docker build -t fl-platform/browser-check:mvp tests/e2e
+          docker run --rm --network fl-platform_default --shm-size=256m -v "$PWD:/src:ro" -v /opt/fl-platform/mvp-checks:/evidence -v /opt/fl-platform/secrets/admin_password:/run/secrets/admin_password:ro fl-platform/browser-check:mvp
+          docker run --rm --network fl-platform_default --shm-size=256m -v "$PWD:/src:ro" -v /opt/fl-platform/mvp-checks:/evidence -v /opt/fl-platform/secrets/admin_password:/run/secrets/admin_password:ro --entrypoint node fl-platform/browser-check:mvp /src/tests/e2e/administration.cjs
+      - name: Session recovery browser fixtures (no credentials)
+        run: docker run --rm --network fl-platform_default --shm-size=256m -e WEB_HOST=web -v "$PWD:/src:ro" --entrypoint node fl-platform/browser-check:mvp /src/tests/e2e/session-recovery.cjs
+      - name: Organization browser fixtures (no credentials)
+        run: docker run --rm --network fl-platform_default --shm-size=256m -e WEB_HOST=web -v "$PWD:/src:ro" -v /opt/fl-platform/mvp-checks:/evidence --entrypoint node fl-platform/browser-check:mvp /src/tests/e2e/organizations.cjs
+      - name: Provider browser fixtures (no credentials)
+        run: docker run --rm --network fl-platform_default --shm-size=256m -e WEB_HOST=web -v "$PWD:/src:ro" -v /opt/fl-platform/mvp-checks:/evidence --entrypoint node fl-platform/browser-check:mvp /src/tests/e2e/providers.cjs
+      - name: Project and session scope browser fixtures (no credentials)
+        run: docker run --rm --network fl-platform_default --shm-size=256m -e WEB_HOST=web -v "$PWD:/src:ro" --entrypoint node fl-platform/browser-check:mvp /src/tests/e2e/project-scope.cjs
+      - name: Organisation project access browser fixtures (no credentials)
+        run: docker run --rm --network fl-platform_default --shm-size=256m -e WEB_HOST=web -v "$PWD:/src:ro" -v /opt/fl-platform/mvp-checks:/evidence --entrypoint node fl-platform/browser-check:mvp /src/tests/e2e/organization-projects.cjs
+      - name: Isolated organisation UI with real API and storage
+        run: sudo python3 tests/integration/run_organization_ui.py --evidence /opt/fl-platform/mvp-checks/organization-projects-real
+      - name: Legacy laboratory admission browser fixtures
+        run: |
+          docker run --rm --network fl-platform_default --shm-size=256m -e WEB_HOST=web -v "$PWD:/src:ro" -v /opt/fl-platform/mvp-checks:/evidence --entrypoint node fl-platform/browser-check:mvp /src/tests/e2e/legacy-lab-admin.cjs
+          docker run --rm --network fl-platform_default --shm-size=256m -e WEB_HOST=web -v "$PWD:/src:ro" -v /opt/fl-platform/mvp-checks:/evidence --entrypoint node fl-platform/browser-check:mvp /src/tests/e2e/legacy-lab.cjs
+      - name: Isolated laboratory grant and revoke with real API
+        run: sudo python3 tests/integration/run_organization_ui.py --browser-check legacy-lab-real --evidence /opt/fl-platform/mvp-checks/legacy-lab-real
+      - name: Backup and restore acceptance
+        run: sudo python3 infra/vps/backup_state.py
+      - name: Container status on failure
+        if: failure()
+        run: docker compose -f compose.yaml -f compose.runtime.yaml ps -a

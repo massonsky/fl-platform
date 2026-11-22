@@ -1,0 +1,117 @@
+# Additive MVP session and immutable simulation registry endpoints.
+Session:
+  post:
+    operationId: login
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: false
+            required: [username, password]
+            properties:
+              username:
+                type: string
+                minLength: 1
+                maxLength: 64
+                description: Exact case-sensitive username, valid UTF-8, at most 64 encoded bytes and no control characters.
+              password:
+                type: string
+                minLength: 1
+                maxLength: 128
+                description: Exact password, valid UTF-8 and at most 128 encoded bytes. Login does not apply the new-password minimum length.
+    responses:
+      '200':
+        description: Opaque bearer session, expires after eight hours.
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [token]
+              properties: {token: {type: string, minLength: 64, maxLength: 64}}
+      '400': {$ref: './common.yaml#/Error'}
+      '401': {$ref: './common.yaml#/Error'}
+      '413': {$ref: './common.yaml#/Error'}
+      '415': {$ref: './common.yaml#/Error'}
+      '429':
+        description: Shared client or account budget exhausted; rejected attempts do not extend its cooldown.
+        headers:
+          Retry-After: {schema: {type: integer, minimum: 1}, description: Whole seconds rounded up from the PostgreSQL budget.}
+        content: {application/json: {schema: {$ref: './common.yaml#/ApiError'}}}
+      '500': {$ref: './common.yaml#/Error'}
+      '503':
+        description: Credential work busy, limiter key or schema unavailable, or dependency failure. Existing authenticated routes remain usable when the limiter key is absent.
+        headers:
+          Retry-After: {schema: {type: integer, enum: [3]}}
+        content: {application/json: {schema: {$ref: './common.yaml#/ApiError'}}}
+  delete:
+    operationId: logout
+    responses:
+      '200':
+        description: Session revoked server-side.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [logged_out]
+              additionalProperties: false
+              properties: {logged_out: {type: boolean, enum: [true]}}
+      '401': {$ref: './common.yaml#/Error'}
+      '500': {$ref: './common.yaml#/Error'}
+      '503': {$ref: './common.yaml#/Error'}
+Me:
+  get:
+    operationId: currentUser
+    responses:
+      '200':
+        description: Current authenticated user.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, name, role]
+              additionalProperties: false
+              properties:
+                id: {$ref: './common.yaml#/Id'}
+                name: {type: string}
+                role: {type: string, enum: [admin, researcher, viewer]}
+      '400': {$ref: './common.yaml#/Error'}
+      '401': {$ref: './common.yaml#/Error'}
+      '403': {$ref: './common.yaml#/Error'}
+      '404': {$ref: './common.yaml#/Error'}
+      '429': {$ref: './common.yaml#/Error'}
+      '500': {$ref: './common.yaml#/Error'}
+      '503': {$ref: './common.yaml#/Error'}
+Presets:
+  get:
+    operationId: getPresets
+    responses:
+      '200':
+        description: Fifteen registered immutable simulation presets.
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [items]
+              additionalProperties: false
+              properties:
+                items:
+                  type: array
+                  maxItems: 100
+                  items:
+                    type: object
+                    required: [id, config]
+                    additionalProperties: false
+                    properties:
+                      id: {type: string}
+                      config: {$ref: './config.yaml#/RunConfig'}
+      '400': {$ref: './common.yaml#/Error'}
+      '401': {$ref: './common.yaml#/Error'}
+      '403': {$ref: './common.yaml#/Error'}
+      '404': {$ref: './common.yaml#/Error'}
+      '429': {$ref: './common.yaml#/Error'}
+      '500': {$ref: './common.yaml#/Error'}
+      '503': {$ref: './common.yaml#/Error'}

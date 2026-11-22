@@ -1,0 +1,198 @@
+syntax = "proto3";
+
+package flplatform.v1;
+option go_package = "github.com/massonsky/fl-platform/FL_Platform_Agent_Ready/services/control-plane/gen/go/flplatform/v1;flplatformv1";
+
+import "google/protobuf/timestamp.proto";
+
+// v1 pre-release candidate; normative rules: contracts/PROTO_V1.md.
+// Do not hand-edit generated stubs or reuse field numbers.
+// Client identity is authenticated from gRPC metadata/TLS, not trusted from client_id alone.
+
+message ClientCapabilities {
+  string runtime = 1;            // e.g. python-pytorch
+  string sdk_version = 2;
+  repeated string model_names = 3;
+  bool gpu_available = 4;
+  uint64 memory_bytes = 5;
+}
+
+message RegisterRequest {
+  string display_name = 1;
+  ClientCapabilities capabilities = 2;
+  uint32 protocol_version = 3;   // must be 1; zero is not negotiated v1
+}
+message RegisterResponse {
+  string client_id = 1;          // server-assigned UUID
+  uint32 heartbeat_interval_seconds = 2;
+  uint32 protocol_version = 3;
+}
+
+message HeartbeatRequest {
+  string client_id = 1;
+  string current_task_id = 2;
+}
+message HeartbeatResponse {
+  bool should_stop = 1;
+  google.protobuf.Timestamp server_time = 2;
+}
+
+message ArtifactRef {
+  string artifact_id = 1;
+  string sha256_hex = 2;
+  uint64 size_bytes = 3;
+  string codec = 4;              // FLOAT32_LE in v1
+  string model_schema_hash = 5;
+  uint32 schema_version = 6;     // 1 for FLOAT32_LE model artifacts
+}
+
+message TensorSpec {
+  string name = 1;
+  string dtype = 2;             // FLOAT32_LE only
+  repeated uint64 shape = 3;    // empty = scalar; zero dimensions forbidden
+  uint64 numel = 4;             // exact product(shape), scalar = 1
+}
+message ModelSchema {
+  uint32 schema_version = 1;    // canonical grammar version, not model revision
+  repeated TensorSpec tensors = 2; // semantic order, never sorted by receiver
+}
+message ErrorDetail {
+  string error_code = 1;        // registered codes in PROTO_V1.md
+  string request_id = 2;        // opaque safe correlation ID
+  bool retryable = 3;           // retry still requires operation idempotency
+}
+
+message TrainingConfig {
+  string algorithm = 1;          // fedavg | fedprox
+  double mu = 2;                // 0 for FedAvg
+  uint32 local_epochs = 3;
+  uint32 batch_size = 4;
+  double learning_rate = 5;
+  uint64 seed = 6;
+  string dataset_id = 7;       // logical local dataset reference
+  string partition_manifest_hash = 8;
+  string model_name = 9;
+  string model_revision = 10;
+  string partition = 11;
+}
+
+message AcquireTaskRequest {
+  string client_id = 1;
+}
+message TaskAssignment {
+  string task_id = 1;
+  string lease_id = 2;
+  string lease_token = 3;       // opaque; must not appear in logs
+  google.protobuf.Timestamp lease_expires_at = 4;
+  string run_id = 5;
+  uint32 round_no = 6;
+  uint64 base_model_version = 7;
+  ArtifactRef global_model = 8;
+  TrainingConfig training = 9;
+  string config_hash = 10;
+  ModelSchema model_schema = 11;
+  uint32 attempt = 12;          // starts at 1, separate task_id per attempt
+  string task_kind = 13;        // train | evaluate
+  uint32 client_index = 14;     // stable simulation shard 0..4
+  bool evaluate_test = 15;      // final round only
+}
+message AcquireTaskResponse {
+  bool has_task = 1;
+  TaskAssignment task = 2;       // omitted when has_task=false
+  uint32 retry_after_seconds = 3;
+}
+
+message MetricValue {
+  string name = 1;
+  double value = 2;
+  string split = 3;              // train_local, validation_global, test_global
+}
+
+message SubmitUpdateRequest {
+  string client_id = 1;
+  string task_id = 2;
+  string lease_id = 3;
+  string lease_token = 4;
+  string idempotency_key = 5;
+  string run_id = 6;
+  uint32 round_no = 7;
+  uint64 base_model_version = 8;
+  string model_schema_hash = 9;
+  ArtifactRef update_artifact = 10;
+  uint64 sample_count = 11;
+  repeated MetricValue metrics = 12;
+}
+message SubmitUpdateResponse {
+  bool accepted = 1;            // accepted != round completed
+  string update_id = 2;
+  string status_code = 3;
+}
+message ReportFailureRequest {
+  string client_id = 1;
+  string task_id = 2;
+  string lease_id = 3;
+  string failure_code = 4;
+  string safe_message = 5;      // no dataset paths, secrets or raw stack dumps
+  string lease_token = 6;
+  string idempotency_key = 7;
+}
+message ReportFailureResponse { bool recorded = 1; }
+
+message RenewLeaseRequest {
+  string client_id = 1;
+  string task_id = 2;
+  string lease_id = 3;
+  string lease_token = 4;
+}
+message RenewLeaseResponse { google.protobuf.Timestamp lease_expires_at = 1; }
+message SubmitEvaluationRequest {
+  string client_id = 1;
+  string task_id = 2;
+  string lease_id = 3;
+  string lease_token = 4;
+  string idempotency_key = 5;
+  string run_id = 6;
+  uint32 round_no = 7;
+  uint64 model_version = 8;
+  repeated MetricValue metrics = 9;
+  repeated uint32 validation_confusion = 10; // row-major 10 x 10
+  repeated uint32 test_confusion = 11; // empty before final round
+}
+message SubmitEvaluationResponse { bool recorded = 1; }
+
+service ParticipantService {
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+  rpc AcquireTask(AcquireTaskRequest) returns (AcquireTaskResponse);
+  rpc SubmitUpdate(SubmitUpdateRequest) returns (SubmitUpdateResponse);
+  rpc ReportFailure(ReportFailureRequest) returns (ReportFailureResponse);
+  rpc RenewLease(RenewLeaseRequest) returns (RenewLeaseResponse);
+  rpc SubmitEvaluation(SubmitEvaluationRequest) returns (SubmitEvaluationResponse);
+}
+
+message DownloadRequest {
+  string artifact_id = 1;
+  string expected_sha256_hex = 2;
+  string task_id = 3;
+  string lease_id = 4;
+  string lease_token = 5;
+}
+message ArtifactChunk {
+  string upload_id = 1;          // repeated on all upload chunks
+  uint64 offset = 2;            // must be monotone and contiguous
+  bytes data = 3;               // at most 1 MiB
+  string expected_sha256_hex = 4;
+  string codec = 5;
+  string model_schema_hash = 6;
+  uint64 total_size_bytes = 7;
+  string task_id = 8;
+  string lease_id = 9;
+  string lease_token = 10;       // upload only; never echo in download chunks
+}
+message UploadReceipt {
+  ArtifactRef artifact = 1;
+}
+service ArtifactService {
+  rpc Upload(stream ArtifactChunk) returns (UploadReceipt);
+  rpc Download(DownloadRequest) returns (stream ArtifactChunk);
+}

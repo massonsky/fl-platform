@@ -1,0 +1,145 @@
+Projects:
+  parameters:
+    - {$ref: './organizations.yaml#/OrganizationId'}
+  get:
+    operationId: listOrganizationProjects
+    parameters:
+      - {$ref: './common.yaml#/limit'}
+      - {$ref: './common.yaml#/cursor'}
+    responses:
+      '200':
+        description: Current authorized representation; PROJECT_ACCESS.md defines replay and pagination.
+        content: {application/json: {schema: {$ref: './project-access-schemas.yaml#/ProjectPage'}}}
+      '400': {$ref: './project-access-schemas.yaml#/Error'}
+      '401': {$ref: './project-access-schemas.yaml#/Error'}
+      '403': {$ref: './project-access-schemas.yaml#/Error'}
+      '404': {$ref: './project-access-schemas.yaml#/Error'}
+      '429': {$ref: './project-access-schemas.yaml#/Error'}
+      '500': {$ref: './project-access-schemas.yaml#/Error'}
+      '503': {$ref: './project-access-schemas.yaml#/Error'}
+ProjectItem:
+  parameters:
+    - {$ref: './organizations.yaml#/OrganizationId'}
+    - {$ref: './common.yaml#/projectId'}
+  get:
+    operationId: getOrganizationProject
+    responses:
+      '200':
+        description: Current authorized representation; PROJECT_ACCESS.md defines replay and pagination.
+        content: {application/json: {schema: {$ref: './project-access-schemas.yaml#/Project'}}}
+      '400': {$ref: './project-access-schemas.yaml#/Error'}
+      '401': {$ref: './project-access-schemas.yaml#/Error'}
+      '403': {$ref: './project-access-schemas.yaml#/Error'}
+      '404': {$ref: './project-access-schemas.yaml#/Error'}
+      '429': {$ref: './project-access-schemas.yaml#/Error'}
+      '500': {$ref: './project-access-schemas.yaml#/Error'}
+      '503': {$ref: './project-access-schemas.yaml#/Error'}
+  put:
+    operationId: createOrganizationProject
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: './project-access-schemas.yaml#/CreateInput'}}
+    responses:
+      '200':
+        description: Current authorized representation; PROJECT_ACCESS.md defines replay and pagination.
+        content: {application/json: {schema: {$ref: './project-access-schemas.yaml#/Project'}}}
+      '400': {$ref: './project-access-schemas.yaml#/Error'}
+      '401': {$ref: './project-access-schemas.yaml#/Error'}
+      '403': {$ref: './project-access-schemas.yaml#/Error'}
+      '404': {$ref: './project-access-schemas.yaml#/Error'}
+      '409': {$ref: './project-access-schemas.yaml#/Error'}
+      '413': {$ref: './project-access-schemas.yaml#/Error'}
+      '415': {$ref: './project-access-schemas.yaml#/Error'}
+      '429': {$ref: './project-access-schemas.yaml#/Error'}
+      '500': {$ref: './project-access-schemas.yaml#/Error'}
+      '503': {$ref: './project-access-schemas.yaml#/Error'}
+Access:
+  parameters:
+    - {$ref: './organizations.yaml#/OrganizationId'}
+    - {$ref: './common.yaml#/projectId'}
+  get:
+    operationId: listOrganizationProjectAccess
+    parameters:
+      - {$ref: './common.yaml#/limit'}
+      - {$ref: './common.yaml#/cursor'}
+    responses:
+      '200':
+        description: Current authorized representation; PROJECT_ACCESS.md defines replay and pagination.
+        content: {application/json: {schema: {$ref: './project-access-schemas.yaml#/AccessPage'}}}
+      '400': {$ref: './project-access-schemas.yaml#/Error'}
+      '401': {$ref: './project-access-schemas.yaml#/Error'}
+      '403': {$ref: './project-access-schemas.yaml#/Error'}
+      '404': {$ref: './project-access-schemas.yaml#/Error'}
+      '429': {$ref: './project-access-schemas.yaml#/Error'}
+      '500': {$ref: './project-access-schemas.yaml#/Error'}
+      '503': {$ref: './project-access-schemas.yaml#/Error'}
+Candidates:
+  parameters:
+    - {$ref: './organizations.yaml#/OrganizationId'}
+    - {$ref: './common.yaml#/projectId'}
+  get:
+    operationId: listOrganizationProjectCandidates
+    parameters:
+      - {$ref: './common.yaml#/limit'}
+      - {$ref: './common.yaml#/cursor'}
+    responses:
+      '200':
+        description: Current authorized representation; PROJECT_ACCESS.md defines replay and pagination.
+        content: {application/json: {schema: {$ref: './project-access-schemas.yaml#/AccessPage'}}}
+      '400': {$ref: './project-access-schemas.yaml#/Error'}
+      '401': {$ref: './project-access-schemas.yaml#/Error'}
+      '403': {$ref: './project-access-schemas.yaml#/Error'}
+      '404': {$ref: './project-access-schemas.yaml#/Error'}
+      '429': {$ref: './project-access-schemas.yaml#/Error'}
+      '500': {$ref: './project-access-schemas.yaml#/Error'}
+      '503': {$ref: './project-access-schemas.yaml#/Error'}
+Member:
+  parameters:
+    - {$ref: './organizations.yaml#/OrganizationId'}
+    - {$ref: './common.yaml#/projectId'}
+    - {$ref: './organizations.yaml#/MemberId'}
+  put:
+    operationId: changeOrganizationProjectGrant
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: './project-access-schemas.yaml#/GrantInput'}}
+    responses:
+      '200':
+        description: Current authorized representation; PROJECT_ACCESS.md defines replay and pagination.
+        content: {application/json: {schema: {$ref: './project-access-schemas.yaml#/Grant'}}}
+      '400': {$ref: './project-access-schemas.yaml#/Error'}
+      '401': {$ref: './project-access-schemas.yaml#/Error'}
+      '403': {$ref: './project-access-schemas.yaml#/Error'}
+      '404': {$ref: './project-access-schemas.yaml#/Error'}
+      '409': {$ref: './project-access-schemas.yaml#/Error'}
+      '413': {$ref: './project-access-schemas.yaml#/Error'}
+      '415': {$ref: './project-access-schemas.yaml#/Error'}
+      '429': {$ref: './project-access-schemas.yaml#/Error'}
+      '500': {$ref: './project-access-schemas.yaml#/Error'}
+      '503': {$ref: './project-access-schemas.yaml#/Error'}
+Visibility:
+  parameters:
+    - {$ref: './organizations.yaml#/OrganizationId'}
+    - {$ref: './common.yaml#/projectId'}
+  patch:
+    operationId: changeOrganizationProjectVisibility
+    requestBody:
+      required: true
+      content:
+        application/json: {schema: {$ref: './project-access-schemas.yaml#/VisibilityInput'}}
+    responses:
+      '200':
+        description: Current authorized representation; PROJECT_ACCESS.md defines replay and pagination.
+        content: {application/json: {schema: {$ref: './project-access-schemas.yaml#/Project'}}}
+      '400': {$ref: './project-access-schemas.yaml#/Error'}
+      '401': {$ref: './project-access-schemas.yaml#/Error'}
+      '403': {$ref: './project-access-schemas.yaml#/Error'}
+      '404': {$ref: './project-access-schemas.yaml#/Error'}
+      '409': {$ref: './project-access-schemas.yaml#/Error'}
+      '413': {$ref: './project-access-schemas.yaml#/Error'}
+      '415': {$ref: './project-access-schemas.yaml#/Error'}
+      '429': {$ref: './project-access-schemas.yaml#/Error'}
+      '500': {$ref: './project-access-schemas.yaml#/Error'}
+      '503': {$ref: './project-access-schemas.yaml#/Error'}
