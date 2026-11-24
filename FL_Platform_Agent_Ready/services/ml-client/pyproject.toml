@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools==80.9.0"]
+requires = ["setuptools==84.1.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -9,7 +9,7 @@ requires-python = ">=3.11,<3.14"
 dependencies = [
   "numpy==2.3.5",
   "scikit-learn==1.8.0",
-  "torch==2.10.0",
+  "torch==2.13.0",
   "grpcio==1.80.0",
   "protobuf==6.33.6",
 ]
